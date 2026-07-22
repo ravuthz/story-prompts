@@ -41,8 +41,18 @@ export default function History() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project) => (
-            <Card key={project.id} className="flex flex-col hover:border-primary/50 transition-colors">
-              <CardHeader>
+            <Card key={project.id} className="relative flex flex-col transition-colors hover:border-primary/50">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-3 top-3 z-10 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => deleteProject(project.id)}
+                aria-label={`Delete ${project.title || "project"}`}
+                title="Delete project"
+              >
+                <Trash2 className="size-4" />
+              </Button>
+              <CardHeader className="pr-14">
                 <div className="flex justify-between items-start gap-4">
                   <div>
                     <CardTitle className="line-clamp-1" title={project.title}>
@@ -74,9 +84,6 @@ export default function History() {
                 <Button variant="default" className="w-full gap-2" onClick={() => handleOpenProject(project.id)}>
                   <Play className="w-4 h-4" />
                   Open Project
-                </Button>
-                <Button variant="outline" size="icon" onClick={() => deleteProject(project.id)} title="Delete">
-                  <Trash2 className="w-4 h-4 text-destructive" />
                 </Button>
               </CardFooter>
             </Card>

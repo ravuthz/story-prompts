@@ -2,19 +2,19 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
-import { Loader2, Wand2, FileText, Settings, Video, Image as ImageIcon, Users } from "lucide-react";
+import { Loader2, Wand2, Copy, Key, Settings, Video, Image as ImageIcon, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
-import { generateStaticTemplate } from "@/services/staticTemplateService";
-import { generateWithGemini } from "@/services/geminiService";
+import { buildMasterPrompt, generateWithGemini, parseGeminiApiKeys } from "@/services/geminiService";
 import { ProjectSettings, StoryboardProject } from "@/types";
 
 const defaultSettings: ProjectSettings = {
@@ -137,6 +137,9 @@ export default function Builder() {
   const { addProject, updateProject, getCurrentProject, setCurrentProject } = useProjectStore();
   const geminiApiKey = useSettingsStore(state => state.geminiApiKey);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [masterPrompt, setMasterPrompt] = useState("");
+  const [isPromptOpen, setIsPromptOpen] = useState(false);
+  const hasApiKey = parseGeminiApiKeys(geminiApiKey).length > 0;
 
   const currentProject = getCurrentProject();
   
@@ -159,32 +162,19 @@ export default function Builder() {
     }
   }, [templateSettings, currentProject, reset]);
 
-  const onSubmit = async (data: ProjectSettings, mode: "static" | "gemini") => {
-    if (mode === "gemini" && !geminiApiKey) {
-      toast.error("Gemini API key is required. Please set it in Settings.");
-      navigate("/settings");
-      return;
-    }
-
+  const onSubmit = async (data: ProjectSettings) => {
     setIsGenerating(true);
     const projectId = currentProject?.id || uuidv4();
 
     try {
-      let scenes = [];
-      if (mode === "gemini") {
-        toast.info("Generating with Gemini...");
-        scenes = await generateWithGemini(data, geminiApiKey);
-        toast.success("Generated successfully!");
-      } else {
-        toast.info("Generating static template...");
-        scenes = generateStaticTemplate(data);
-        toast.success("Template created!");
-      }
+      toast.info("Generating with Gemini...");
+      const scenes = await generateWithGemini(data, geminiApiKey);
+      toast.success("Generated successfully!");
 
       const project: StoryboardProject = {
         id: projectId,
         title: data.title || "Untitled Project",
-        mode,
+        mode: "gemini",
         createdAt: currentProject?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         settings: data,
@@ -206,6 +196,19 @@ export default function Builder() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleCreate = handleSubmit((data) => {
+    if (hasApiKey) {
+      return onSubmit(data);
+    }
+    setMasterPrompt(buildMasterPrompt(data));
+    setIsPromptOpen(true);
+  });
+
+  const handleCopyPrompt = async () => {
+    await navigator.clipboard.writeText(masterPrompt);
+    toast.success("Master prompt copied");
   };
 
   const handleSaveDraft = () => {
@@ -234,7 +237,7 @@ export default function Builder() {
   };
 
   return (
-    <div className="p-6 md:p-10 w-full space-y-8 h-full overflow-y-auto">
+    <div className="p-4 md:p-6 w-full space-y-5 h-full overflow-y-auto">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Storyboard Builder</h1>
         <p className="text-muted-foreground mt-1">Configure your project settings to generate prompts.</p>
@@ -245,32 +248,57 @@ export default function Builder() {
         <Button variant="outline" onClick={() => reset(defaultSettings)} disabled={isGenerating}>Reset Form</Button>
         <div className="flex-1" />
         <Button 
-          variant="secondary" 
-          onClick={handleSubmit((d) => onSubmit(d, "static"))} 
+          variant="default"
+          onClick={handleCreate}
           disabled={isGenerating}
           className="gap-2"
         >
-          {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-          Generate Static Template
-        </Button>
-        <Button 
-          variant="default"
-          onClick={handleSubmit((d) => onSubmit(d, "gemini"))} 
-          disabled={isGenerating}
-          className="gap-2 bg-purple-600 hover:bg-purple-700 text-white"
-        >
           {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-          Generate with Gemini
+          {isGenerating ? "Generating…" : hasApiKey ? "Generate Storyboard" : "Create Master Prompt"}
         </Button>
       </div>
 
-      <form className="space-y-8">
-        <div className="w-full space-y-8 pb-12">
+      <div className="rounded-xl border bg-card p-4 text-sm shadow-sm">
+        <div className="flex items-start gap-3">
+          {hasApiKey ? <Wand2 className="mt-0.5 h-5 w-5 text-primary" /> : <Key className="mt-0.5 h-5 w-5 text-muted-foreground" />}
+          <div>
+            <p className="font-medium">{hasApiKey ? "AI generation is ready" : "No API key — copy-ready mode"}</p>
+            <p className="mt-1 text-muted-foreground">
+              {hasApiKey
+                ? `${parseGeminiApiKeys(geminiApiKey).length} Gemini API key${parseGeminiApiKeys(geminiApiKey).length === 1 ? "" : "s"} configured. The app will try them in order.`
+                : "Complete the builder and we’ll create a master prompt you can paste into any AI chat or agent."}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <Dialog open={isPromptOpen} onOpenChange={setIsPromptOpen}>
+        <DialogContent className="max-h-[88vh] sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Your master storyboard prompt</DialogTitle>
+            <DialogDescription>
+              Paste this into ChatGPT, Gemini, Claude, or another AI agent to generate your storyboard.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea value={masterPrompt} readOnly className="min-h-[50vh] resize-none font-mono text-xs" />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setIsPromptOpen(false); navigate("/settings"); }} className="gap-2">
+              <Key className="h-4 w-4" /> Add API key
+            </Button>
+            <Button onClick={handleCopyPrompt} className="gap-2">
+              <Copy className="h-4 w-4" /> Copy master prompt
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <form className="space-y-5">
+        <div className="w-full space-y-5 pb-12">
           
           {/* Project Settings */}
-          <section className="bg-white border border-slate-200 rounded-xl px-6 py-6 shadow-sm">
-            <div className="flex items-center gap-2 text-lg font-bold text-slate-900 mb-6 border-b pb-4">
-              <Settings className="w-5 h-5 text-[#5436D6]" />
+          <section className="bg-card border border-border rounded-xl px-4 py-4 shadow-sm">
+            <div className="flex items-center gap-2 text-lg font-bold text-foreground mb-4 border-b pb-3">
+              <Settings className="w-5 h-5 text-primary" />
                 Project & Story Settings
             </div>
             <div className="space-y-6">
@@ -346,9 +374,9 @@ export default function Builder() {
           </section>
 
           {/* Visual Settings */}
-          <section className="bg-white border border-slate-200 rounded-xl px-6 py-6 shadow-sm">
-            <div className="flex items-center gap-2 text-lg font-bold text-slate-900 mb-6 border-b pb-4">
-              <ImageIcon className="w-5 h-5 text-[#5436D6]" />
+          <section className="bg-card border border-border rounded-xl px-4 py-4 shadow-sm">
+            <div className="flex items-center gap-2 text-lg font-bold text-foreground mb-4 border-b pb-3">
+              <ImageIcon className="w-5 h-5 text-primary" />
                 Visual Settings
             </div>
             <div className="space-y-6">
@@ -400,9 +428,9 @@ export default function Builder() {
           </section>
 
           {/* Camera Settings */}
-          <section className="bg-white border border-slate-200 rounded-xl px-6 py-6 shadow-sm">
-            <div className="flex items-center gap-2 text-lg font-bold text-slate-900 mb-6 border-b pb-4">
-              <Video className="w-5 h-5 text-[#5436D6]" />
+          <section className="bg-card border border-border rounded-xl px-4 py-4 shadow-sm">
+            <div className="flex items-center gap-2 text-lg font-bold text-foreground mb-4 border-b pb-3">
+              <Video className="w-5 h-5 text-primary" />
                 Camera & Shot Settings
             </div>
             <div className="space-y-6">
@@ -450,9 +478,9 @@ export default function Builder() {
           </section>
 
           {/* Story Controls */}
-          <section className="bg-white border border-slate-200 rounded-xl px-6 py-6 shadow-sm">
-            <div className="flex items-center gap-2 text-lg font-bold text-slate-900 mb-6 border-b pb-4">
-              <Users className="w-5 h-5 text-[#5436D6]" />
+          <section className="bg-card border border-border rounded-xl px-4 py-4 shadow-sm">
+            <div className="flex items-center gap-2 text-lg font-bold text-foreground mb-4 border-b pb-3">
+              <Users className="w-5 h-5 text-primary" />
                 Story & Character Controls
             </div>
             <div className="space-y-6">

@@ -18,12 +18,7 @@ export const useSettingsStore = create<SettingsState>()(
       rememberApiKey: false,
       theme: "system",
       setGeminiApiKey: (key) => set({ geminiApiKey: key }),
-      setRememberApiKey: (remember) => {
-        set({ rememberApiKey: remember });
-        if (!remember) {
-          set({ geminiApiKey: "" });
-        }
-      },
+      setRememberApiKey: (remember) => set({ rememberApiKey: remember }),
       setTheme: (theme) => set({ theme }),
       clearData: () => set({ geminiApiKey: "", rememberApiKey: false }),
     }),

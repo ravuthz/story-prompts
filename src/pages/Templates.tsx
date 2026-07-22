@@ -71,7 +71,7 @@ export default function Templates() {
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8 w-full">
+    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-5 w-full">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Templates</h1>
         <p className="text-muted-foreground mt-1">

@@ -1,15 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Film, Plus, Clock, Key, Save, Trash2, Play } from "lucide-react";
+import { Film, Plus, Clock, Trash2, Play } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useProjectStore } from "@/stores/useProjectStore";
-import { useSettingsStore } from "@/stores/useSettingsStore";
 export default function Dashboard() {
   const navigate = useNavigate();
   const { projects, setCurrentProject, deleteProject } = useProjectStore();
-  const geminiApiKey = useSettingsStore(state => state.geminiApiKey);
 
   const handleCreateNew = () => {
     setCurrentProject(null);
@@ -22,26 +20,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8 w-full">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            Create and manage your AI storyboard prompts. All data stays in your browser.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Badge variant={geminiApiKey ? "default" : "secondary"} className="h-8 px-3 gap-1.5">
-            <Key className="w-3.5 h-3.5" />
-            {geminiApiKey ? "Gemini Ready" : "Static Mode"}
-          </Badge>
-          <Badge variant="outline" className="h-8 px-3 gap-1.5 border-green-500 text-green-600 dark:text-green-400">
-            <Save className="w-3.5 h-3.5" />
-            Local Storage Active
-          </Badge>
-        </div>
-      </div>
-
+    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-5 w-full">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="col-span-1 md:col-span-2 border-primary/20 shadow-sm bg-primary/5">
           <CardHeader>

@@ -1,11 +1,9 @@
 import { ProjectSettings, StoryboardScene } from "@/types";
 
-export const generateWithGemini = async (settings: ProjectSettings, apiKey: string): Promise<StoryboardScene[]> => {
-  if (!apiKey) {
-    throw new Error("Gemini API key is required");
-  }
+export const parseGeminiApiKeys = (value: string): string[] =>
+  [...new Set(value.split(/[\n,]+/).map((key) => key.trim()).filter(Boolean))];
 
-  const prompt = `You are an expert storyboard artist, cinematographer, and AI prompt engineer. 
+export const buildMasterPrompt = (settings: ProjectSettings): string => `You are an expert storyboard artist, cinematographer, and AI prompt engineer.
 I need you to generate a structured storyboard for a video project.
 
 Project Title: ${settings.title}
@@ -14,6 +12,12 @@ Synopsis: ${settings.fullSynopsis}
 Number of Scenes: ${settings.numberOfScenes}
 Visual Style: ${settings.visualStyle}
 Aspect Ratio: ${settings.aspectRatio}
+Genre: ${settings.genre}
+Tone: ${settings.tone}
+Pacing: ${settings.pacing}
+Main Characters: ${settings.mainCharacters}
+Location: ${settings.location}
+Additional Instructions: ${settings.additionalInstructions}
 
 Generate exactly ${settings.numberOfScenes} scenes. Return the result strictly as a JSON array of objects. 
 Do not include markdown blocks like \`\`\`json in your response, just the raw JSON array.
@@ -30,106 +34,79 @@ Each object must follow this exact TypeScript interface:
   "location": "string",
   "timeOfDay": "string",
   "weather": "string",
-  "characters": [
-    {
-      "characterId": "string",
-      "name": "string",
-      "role": "string",
-      "currentOutfit": "string",
-      "position": "string",
-      "expression": "string",
-      "action": "string",
-      "props": "string",
-      "continuityNotes": "string"
-    }
-  ],
-  "imagePrompt": "string (Highly detailed prompt for an AI image generator like Midjourney. Include subject, environment, lighting, camera, style)",
-  "videoPrompt": "string (Highly detailed prompt for an AI video generator like Sora, Kling, Runway. Focus on camera movement and character action)",
-  "negativePrompt": "string (Things to exclude, comma separated)",
+  "characters": [{
+    "characterId": "string", "name": "string", "role": "string",
+    "currentOutfit": "string", "position": "string", "expression": "string",
+    "action": "string", "props": "string", "continuityNotes": "string"
+  }],
+  "imagePrompt": "detailed image-generation prompt",
+  "videoPrompt": "detailed video-generation prompt focused on movement and action",
+  "negativePrompt": "things to exclude, comma separated",
   "camera": {
-    "shotType": "string",
-    "angle": "string",
-    "framing": "string",
-    "lens": "string",
-    "focalLength": "string",
-    "movement": "string",
-    "movementDuration": "string",
-    "stability": "string",
-    "focus": "string",
-    "depthOfField": "string",
-    "composition": "string",
-    "duration": "string",
-    "transition": "string"
+    "shotType": "string", "angle": "string", "framing": "string", "lens": "string",
+    "focalLength": "string", "movement": "string", "movementDuration": "string",
+    "stability": "string", "focus": "string", "depthOfField": "string",
+    "composition": "string", "duration": "string", "transition": "string"
   },
   "environment": {
-    "location": "string",
-    "environment": "string",
-    "time": "string",
-    "weather": "string",
-    "lighting": "string",
-    "mood": "string",
-    "colorTone": "string",
-    "productionDesign": "string",
-    "visualStyle": "string",
-    "realism": "string",
-    "texture": "string",
-    "atmosphere": "string"
+    "location": "string", "environment": "string", "time": "string", "weather": "string",
+    "lighting": "string", "mood": "string", "colorTone": "string",
+    "productionDesign": "string", "visualStyle": "string", "realism": "string",
+    "texture": "string", "atmosphere": "string"
   },
   "audio": {
-    "dialogue": "string",
-    "narration": "string",
-    "soundEffects": "string",
-    "backgroundAmbience": "string",
-    "music": "string",
-    "voiceDelivery": "string",
+    "dialogue": "string", "narration": "string", "soundEffects": "string",
+    "backgroundAmbience": "string", "music": "string", "voiceDelivery": "string",
     "lipSyncInstructions": "string"
   },
-  "timing": [
-    {
-      "timeRange": "string (e.g., '0.0-2.0s')",
-      "description": "string"
-    }
-  ],
+  "timing": [{ "timeRange": "string (e.g. 0.0-2.0s)", "description": "string" }],
   "continuityNotes": ["string"]
 }
 
-Ensure the output is valid JSON and strictly follows the schema. Generate exactly ${settings.numberOfScenes} items in the array.`;
+Ensure the output is valid JSON, strictly follows the schema, preserves character and wardrobe continuity, and contains exactly ${settings.numberOfScenes} items.`;
 
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          responseMimeType: "application/json",
-        }
-      }),
-    });
+const generateWithKey = async (settings: ProjectSettings, apiKey: string): Promise<StoryboardScene[]> => {
+  const prompt = buildMasterPrompt(settings);
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || "Failed to generate storyboard from Gemini");
-    }
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7, responseMimeType: "application/json" }
+    }),
+  });
 
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!text) {
-      throw new Error("Received empty response from Gemini");
-    }
-
-    const parsed: StoryboardScene[] = JSON.parse(text);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      throw new Error("Invalid format received from Gemini");
-    }
-    
-    return parsed;
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    throw error;
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error?.message || "Failed to generate storyboard from Gemini");
   }
+
+  const data = await response.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error("Received empty response from Gemini");
+
+  const parsed: StoryboardScene[] = JSON.parse(text);
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error("Invalid format received from Gemini");
+  }
+  return parsed;
+};
+
+export const generateWithGemini = async (settings: ProjectSettings, apiKeyInput: string): Promise<StoryboardScene[]> => {
+  const apiKeys = parseGeminiApiKeys(apiKeyInput);
+  if (apiKeys.length === 0) {
+    throw new Error("Gemini API key is required");
+  }
+
+  let lastError: unknown;
+  for (const apiKey of apiKeys) {
+    try {
+      return await generateWithKey(settings, apiKey);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  console.error("All Gemini API keys failed:", lastError);
+  throw lastError instanceof Error ? lastError : new Error("All Gemini API keys failed");
 };

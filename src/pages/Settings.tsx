@@ -1,18 +1,21 @@
 import { useState } from "react";
-import { Key, Save, Trash2, Shield, Moon, Sun, Monitor } from "lucide-react";
+import { Key, Save, Trash2, Shield, Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
 import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useProjectStore } from "@/stores/useProjectStore";
+import { useCharacterStore } from "@/stores/useCharacterStore";
 
 export default function Settings() {
   const settings = useSettingsStore();
+  const projects = useProjectStore(state => state.projects);
+  const characters = useCharacterStore(state => state.characters);
   
   const [apiKeyInput, setApiKeyInput] = useState(settings.geminiApiKey);
   const [rememberKey, setRememberKey] = useState(settings.rememberApiKey);
@@ -30,8 +33,29 @@ export default function Settings() {
     }
   };
 
+  const handleExportAllData = () => {
+    const backup = {
+      exportedAt: new Date().toISOString(),
+      version: 1,
+      projects,
+      characters,
+      preferences: {
+        theme: settings.theme,
+        rememberApiKey: settings.rememberApiKey,
+      },
+    };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `storyboard-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    toast.success("Data backup exported");
+  };
+
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-8 w-full">
+    <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-5 w-full">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground mt-1">
@@ -39,17 +63,17 @@ export default function Settings() {
         </p>
       </div>
 
-      <div className="grid gap-8">
+      <div className="grid gap-5">
         
         {/* Gemini API Key */}
         <Card className="border-primary/20 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Key className="w-5 h-5 text-primary" />
-              Gemini API Key
+              Gemini API Keys
             </CardTitle>
             <CardDescription>
-              Required for AI generation. Get your free key from Google AI Studio.
+              Add one or more keys for in-app generation. Put each key on a new line.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -58,19 +82,21 @@ export default function Settings() {
               <Shield className="w-5 h-5 shrink-0 text-amber-500" />
               <div>
                 <p className="font-medium text-foreground mb-1">Privacy Notice</p>
-                <p>Your API key is never sent to any backend server except directly to Google's official Gemini API. It is stored exclusively in your browser's LocalStorage if you enable the option below.</p>
+                <p>Your keys are sent only to Google's official Gemini API. When multiple keys are provided, the app tries them in order until one succeeds.</p>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="apiKey">API Key</Label>
-              <Input 
+              <Label htmlFor="apiKey">API keys</Label>
+              <Textarea
                 id="apiKey"
-                type="password"
-                placeholder="AIzaSy..."
+                rows={5}
+                spellCheck={false}
+                placeholder={"AIzaSy...\nAIzaSy..."}
                 value={apiKeyInput}
                 onChange={(e) => setApiKeyInput(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">One key per line. Blank lines are ignored.</p>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -80,7 +106,7 @@ export default function Settings() {
                 onCheckedChange={setRememberKey}
               />
               <Label htmlFor="rememberKey" className="font-normal">
-                Remember my API key in local storage
+                Remember my API keys in local storage
               </Label>
             </div>
 
@@ -92,54 +118,18 @@ export default function Settings() {
           </CardFooter>
         </Card>
 
-        {/* Appearance */}
+        {/* Data Management */}
         <Card>
           <CardHeader>
-            <CardTitle>Appearance</CardTitle>
-            <CardDescription>Customize the application theme.</CardDescription>
+            <CardTitle>Data Management</CardTitle>
+            <CardDescription>Download a JSON backup or clear the application data stored in this browser.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2 max-w-xs">
-              <Label>Theme</Label>
-              <Select 
-                value={settings.theme} 
-                onValueChange={(val) => {
-                  if (val === "light" || val === "dark" || val === "system") {
-                    settings.setTheme(val);
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="light">
-                    <div className="flex items-center gap-2"><Sun className="w-4 h-4" /> Light</div>
-                  </SelectItem>
-                  <SelectItem value="dark">
-                    <div className="flex items-center gap-2"><Moon className="w-4 h-4" /> Dark</div>
-                  </SelectItem>
-                  <SelectItem value="system">
-                    <div className="flex items-center gap-2"><Monitor className="w-4 h-4" /> System</div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Data Management */}
-        <Card className="border-destructive/20">
-          <CardHeader>
-            <CardTitle className="text-destructive">Danger Zone</CardTitle>
-            <CardDescription>Permanently remove data from your browser.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              This action cannot be undone. It will clear all your projects, templates, characters, and settings from this browser.
-            </p>
+          <CardContent className="flex flex-col gap-3 sm:flex-row">
+            <Button variant="outline" onClick={handleExportAllData} className="gap-2">
+              <Download className="w-4 h-4" /> Export All Data
+            </Button>
             <Button variant="destructive" onClick={handleClearAllData} className="gap-2">
-              <Trash2 className="w-4 h-4" /> Clear All Local Data
+              <Trash2 className="w-4 h-4" /> Clear All Data
             </Button>
           </CardContent>
         </Card>

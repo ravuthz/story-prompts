@@ -250,19 +250,19 @@ export default function Results() {
                 </p>
 
                 <div className="w-full overflow-hidden rounded-lg border bg-muted/20 text-sm">
-                  <div className="flex items-start justify-between gap-6 border-b px-4 py-3">
+                  <div className="flex items-start justify-between gap-6 border-b p-3">
                     <span className="shrink-0 text-xs font-medium uppercase text-muted-foreground/70">Location</span>
                     <span className="min-w-0 break-words text-right font-semibold text-foreground">{activeScene.location}</span>
                   </div>
-                  <div className="flex items-start justify-between gap-6 border-b px-4 py-3">
+                  <div className="flex items-start justify-between gap-6 border-b p-3">
                     <span className="shrink-0 text-xs font-medium uppercase text-muted-foreground/70">Time</span>
                     <span className="min-w-0 break-words text-right font-semibold text-foreground">{activeScene.timeOfDay}</span>
                   </div>
-                  <div className="flex items-start justify-between gap-6 border-b px-4 py-3">
+                  <div className="flex items-start justify-between gap-6 border-b p-3">
                     <span className="shrink-0 text-xs font-medium uppercase text-muted-foreground/70">Shot Type</span>
                     <span className="min-w-0 break-words text-right font-semibold text-foreground">{activeScene.camera.shotType}</span>
                   </div>
-                  <div className="flex items-start justify-between gap-6 px-4 py-3">
+                  <div className="flex items-start justify-between gap-6 p-3">
                     <span className="shrink-0 text-xs font-medium uppercase text-muted-foreground/70">Duration</span>
                     <span className="min-w-0 break-words text-right font-semibold text-foreground">{activeScene.duration}s</span>
                   </div>
@@ -270,11 +270,12 @@ export default function Results() {
               </div>
 
               {/* Image Preview */}
-              <div className="flex min-w-0 flex-col self-stretch">
-                <div className="text-[12px] font-semibold text-foreground mb-2">
+              <div className="flex min-w-0 flex-col self-stretch overflow-hidden rounded-xl border bg-card">
+                <div className="border-b p-3 text-[12px] font-semibold text-foreground">
                   Image Preview <span className="text-muted-foreground/70 font-normal ml-1">(Use Image Prompt to generate)</span>
                 </div>
-                <div className="group relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-muted/20 xl:min-h-0 xl:flex-1 xl:aspect-auto">
+                <div className="flex flex-1 p-3">
+                  <div className="group relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border bg-muted/20 xl:min-h-0 xl:flex-1 xl:aspect-auto">
                   {previewUrl ? (
                     <>
                       <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
@@ -297,6 +298,7 @@ export default function Results() {
                       <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
                     </div>
                   )}
+                  </div>
                 </div>
               </div>
             </div>

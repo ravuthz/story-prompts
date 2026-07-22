@@ -3,6 +3,7 @@ export type AspectRatio =
   | "9:16 Vertical"
   | "1:1 Square"
   | "4:3 Standard"
+  | "3:4 Portrait"
   | "3:2 Cinematic Photo"
   | "2.39:1 Anamorphic";
 

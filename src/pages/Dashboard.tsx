@@ -94,10 +94,7 @@ export default function Dashboard() {
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1">
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {project.settings.storyConcept || "No description provided."}
-                  </p>
-                  <div className="mt-4 text-xs text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     Last edited: {new Date(project.updatedAt).toLocaleDateString()}
                   </div>
                 </CardContent>

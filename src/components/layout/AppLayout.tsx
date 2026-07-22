@@ -1,12 +1,14 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { 
-  Clapperboard, Database, Sun, Moon,
+  Clapperboard, Database, Sun, Moon, Key,
   Home, Folder, LayoutTemplate, Film, Settings, Clock, HelpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
+import { parseGeminiApiKeys } from "@/services/geminiService";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
@@ -21,6 +23,8 @@ export default function AppLayout() {
   const currentProject = getCurrentProject();
   const theme = useSettingsStore(state => state.theme);
   const setTheme = useSettingsStore(state => state.setTheme);
+  const geminiApiKey = useSettingsStore(state => state.geminiApiKey);
+  const apiKeyCount = parseGeminiApiKeys(geminiApiKey).length;
   const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   
   const NavLinks = () => (
@@ -65,6 +69,17 @@ export default function AppLayout() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
+          <Badge
+            variant={apiKeyCount > 0 ? "outline" : "destructive"}
+            className={apiKeyCount > 0 ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400" : undefined}
+            aria-label={apiKeyCount > 0 ? `${apiKeyCount} API key${apiKeyCount === 1 ? "" : "s"} configured` : "No API key configured"}
+            title={apiKeyCount > 0 ? `${apiKeyCount} API key${apiKeyCount === 1 ? "" : "s"} configured` : "No API key configured"}
+          >
+            <Key className={apiKeyCount > 0 ? "text-green-600 dark:text-green-400" : "text-destructive"} />
+            <span className="hidden sm:inline">
+              {apiKeyCount > 0 ? `${apiKeyCount} API key${apiKeyCount === 1 ? "" : "s"}` : "No API Key"}
+            </span>
+          </Badge>
           <div className="hidden items-center gap-1.5 rounded-md border bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground lg:flex">
             <Database className="size-3.5" />
             <span>Stored locally</span>

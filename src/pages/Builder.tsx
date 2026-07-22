@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
-import { Loader2, Wand2, Copy, Key, Settings, Video, Image as ImageIcon, Users } from "lucide-react";
+import { Loader2, Wand2, Copy, Key, Settings, Video, Image as ImageIcon, Users, Save, RotateCcw, Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 import { useProjectStore } from "@/stores/useProjectStore";
@@ -131,6 +131,16 @@ const defaultSettings: ProjectSettings = {
   }
 };
 
+const aspectRatioOptions: { label: string; value: ProjectSettings["aspectRatio"] }[] = [
+  { label: "16:9", value: "16:9 Landscape" },
+  { label: "4:3", value: "4:3 Standard" },
+  { label: "1:1", value: "1:1 Square" },
+  { label: "3:4", value: "3:4 Portrait" },
+  { label: "9:16", value: "9:16 Vertical" },
+];
+
+const sceneCountOptions = [5, 10, 15, 20, 25, 50, 100];
+
 export default function Builder() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -139,6 +149,7 @@ export default function Builder() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [masterPrompt, setMasterPrompt] = useState("");
   const [isPromptOpen, setIsPromptOpen] = useState(false);
+  const [isDraftSaved, setIsDraftSaved] = useState(false);
   const hasApiKey = parseGeminiApiKeys(geminiApiKey).length > 0;
 
   const currentProject = getCurrentProject();
@@ -151,7 +162,7 @@ export default function Builder() {
       ? { ...defaultSettings, ...templateSettings }
       : defaultSettings;
 
-  const { register, handleSubmit, control, watch, reset } = useForm<ProjectSettings>({
+  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<ProjectSettings>({
     defaultValues: initialValues
   });
 
@@ -207,12 +218,15 @@ export default function Builder() {
   });
 
   const handleCopyPrompt = async () => {
-    await navigator.clipboard.writeText(masterPrompt);
-    toast.success("Master prompt copied");
+    try {
+      await navigator.clipboard.writeText(masterPrompt);
+      toast.success("Master prompt copied");
+    } catch {
+      toast.error("Could not copy the prompt. Select the text and copy it manually.");
+    }
   };
 
-  const handleSaveDraft = () => {
-    const data = watch();
+  const saveDraft = (data: ProjectSettings) => {
     const projectId = currentProject?.id || uuidv4();
     
     const project: StoryboardProject = {
@@ -232,56 +246,34 @@ export default function Builder() {
       addProject(project);
       setCurrentProject(projectId);
     }
-    
+
+    setIsDraftSaved(true);
+    window.setTimeout(() => setIsDraftSaved(false), 2000);
     toast.success("Draft saved to local storage");
   };
 
+  const handleSaveDraft = handleSubmit(saveDraft, () => {
+    toast.error("Project title and story concept are required");
+  });
+
   return (
     <div className="p-4 md:p-6 w-full space-y-5 h-full overflow-y-auto">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Storyboard Builder</h1>
-        <p className="text-muted-foreground mt-1">Configure your project settings to generate prompts.</p>
-      </div>
-
-      <div className="flex flex-wrap gap-4 items-center bg-card border rounded-lg p-4 sticky top-[73px] z-10 shadow-sm">
-        <Button variant="outline" onClick={handleSaveDraft} disabled={isGenerating}>Save Draft</Button>
-        <Button variant="outline" onClick={() => reset(defaultSettings)} disabled={isGenerating}>Reset Form</Button>
-        <div className="flex-1" />
-        <Button 
-          variant="default"
-          onClick={handleCreate}
-          disabled={isGenerating}
-          className="gap-2"
-        >
-          {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-          {isGenerating ? "Generating…" : hasApiKey ? "Generate Storyboard" : "Create Master Prompt"}
-        </Button>
-      </div>
-
-      <div className="rounded-xl border bg-card p-4 text-sm shadow-sm">
-        <div className="flex items-start gap-3">
-          {hasApiKey ? <Wand2 className="mt-0.5 h-5 w-5 text-primary" /> : <Key className="mt-0.5 h-5 w-5 text-muted-foreground" />}
-          <div>
-            <p className="font-medium">{hasApiKey ? "AI generation is ready" : "No API key — copy-ready mode"}</p>
-            <p className="mt-1 text-muted-foreground">
-              {hasApiKey
-                ? `${parseGeminiApiKeys(geminiApiKey).length} Gemini API key${parseGeminiApiKeys(geminiApiKey).length === 1 ? "" : "s"} configured. The app will try them in order.`
-                : "Complete the builder and we’ll create a master prompt you can paste into any AI chat or agent."}
-            </p>
-          </div>
-        </div>
-      </div>
-
       <Dialog open={isPromptOpen} onOpenChange={setIsPromptOpen}>
-        <DialogContent className="max-h-[88vh] sm:max-w-3xl">
+        <DialogContent className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-4 sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>Your master storyboard prompt</DialogTitle>
             <DialogDescription>
               Paste this into ChatGPT, Gemini, Claude, or another AI agent to generate your storyboard.
             </DialogDescription>
           </DialogHeader>
-          <Textarea value={masterPrompt} readOnly className="min-h-[50vh] resize-none font-mono text-xs" />
+          <Textarea
+            value={masterPrompt}
+            readOnly
+            aria-label="Generated master storyboard prompt"
+            className="field-sizing-fixed h-[55dvh] min-h-0 max-h-[36rem] resize-none overflow-y-auto bg-muted/30 font-mono text-xs leading-relaxed"
+          />
           <DialogFooter>
+            <DialogClose render={<Button variant="ghost" />}>Close</DialogClose>
             <Button variant="outline" onClick={() => { setIsPromptOpen(false); navigate("/settings"); }} className="gap-2">
               <Key className="h-4 w-4" /> Add API key
             </Button>
@@ -297,23 +289,93 @@ export default function Builder() {
           
           {/* Project Settings */}
           <section className="bg-card border border-border rounded-xl px-4 py-4 shadow-sm">
-            <div className="flex items-center gap-2 text-lg font-bold text-foreground mb-4 border-b pb-3">
-              <Settings className="w-5 h-5 text-primary" />
-                Project & Story Settings
+            <div className="mb-4 flex items-center justify-between gap-3 border-b pb-3">
+              <div className="flex min-w-0 items-center gap-2 text-lg font-bold text-foreground">
+                <Settings className="size-5 shrink-0 text-primary" />
+                <span className="truncate">Project & Story Settings</span>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleSaveDraft}
+                  disabled={isGenerating}
+                  aria-label={isDraftSaved ? "Draft saved" : "Save draft"}
+                  title={isDraftSaved ? "Draft saved" : "Save draft"}
+                >
+                  {isDraftSaved ? <Check className="size-4" /> : <Save className="size-4" />}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => { reset(defaultSettings); setIsDraftSaved(false); }}
+                  disabled={isGenerating}
+                  aria-label="Reset form"
+                  title="Reset form"
+                >
+                  <RotateCcw className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="default"
+                  size="icon"
+                  onClick={handleCreate}
+                  disabled={isGenerating}
+                  aria-label={isGenerating ? "Generating storyboard" : hasApiKey ? "Generate storyboard" : "Create master prompt"}
+                  title={isGenerating ? "Generating…" : hasApiKey ? "Generate storyboard" : "Create master prompt"}
+                >
+                  {isGenerating ? <Loader2 className="size-4 animate-spin" /> : <Wand2 className="size-4" />}
+                </Button>
+              </div>
             </div>
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label>Project Title</Label>
-                  <Input {...register("title")} placeholder="e.g., The Last Horizon" />
+                  <Label htmlFor="projectTitle">Project Title <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="projectTitle"
+                    {...register("title", { required: "Project title is required" })}
+                    placeholder="e.g., The Last Horizon"
+                    aria-invalid={Boolean(errors.title)}
+                  />
+                  {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Number of Scenes</Label>
-                  <Input type="number" min={1} max={100} {...register("numberOfScenes", { valueAsNumber: true })} />
+                  <Controller
+                    control={control}
+                    name="numberOfScenes"
+                    render={({ field }) => (
+                      <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Number of scenes">
+                        {sceneCountOptions.map((count) => (
+                          <Button
+                            key={count}
+                            type="button"
+                            size="sm"
+                            variant={field.value === count ? "default" : "outline"}
+                            onClick={() => field.onChange(count)}
+                            aria-pressed={field.value === count}
+                            className="min-w-10 shrink-0 rounded-full"
+                          >
+                            {count}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label>Story Concept</Label>
-                  <Input {...register("storyConcept")} placeholder="A brief one-sentence pitch..." />
+                  <Label htmlFor="storyConcept">Story Concept <span className="text-destructive">*</span></Label>
+                  <Textarea
+                    id="storyConcept"
+                    rows={2}
+                    {...register("storyConcept", { required: "Story concept is required" })}
+                    placeholder="A brief one-sentence pitch..."
+                    aria-invalid={Boolean(errors.storyConcept)}
+                  />
+                  {errors.storyConcept && <p className="text-xs text-destructive">{errors.storyConcept.message}</p>}
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Full Synopsis</Label>
@@ -347,16 +409,21 @@ export default function Builder() {
                     control={control}
                     name="aspectRatio"
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger><SelectValue placeholder="Select ratio" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="16:9 Landscape">16:9 Landscape</SelectItem>
-                          <SelectItem value="9:16 Vertical">9:16 Vertical</SelectItem>
-                          <SelectItem value="1:1 Square">1:1 Square</SelectItem>
-                          <SelectItem value="4:3 Standard">4:3 Standard</SelectItem>
-                          <SelectItem value="2.39:1 Anamorphic">2.39:1 Anamorphic</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Aspect ratio">
+                        {aspectRatioOptions.map((option) => (
+                          <Button
+                            key={option.value}
+                            type="button"
+                            size="sm"
+                            variant={field.value === option.value ? "default" : "outline"}
+                            onClick={() => field.onChange(option.value)}
+                            aria-pressed={field.value === option.value}
+                            className="min-w-12 shrink-0 rounded-full"
+                          >
+                            {option.label}
+                          </Button>
+                        ))}
+                      </div>
                     )}
                   />
                 </div>

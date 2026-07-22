@@ -239,9 +239,9 @@ export default function Results() {
           <div className="bg-card border rounded-xl shadow-sm p-5 space-y-5 relative">
 
             {/* Scene Header & Preview */}
-            <div className="flex flex-col xl:flex-row gap-8">
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
               {/* Info */}
-              <div className="flex-1 space-y-4">
+              <div className="min-w-0 space-y-4">
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">{activeScene.title}</h2>
                 </div>
@@ -270,11 +270,11 @@ export default function Results() {
               </div>
 
               {/* Image Preview */}
-              <div className="xl:w-[500px] shrink-0">
+              <div className="flex min-w-0 flex-col self-stretch">
                 <div className="text-[12px] font-semibold text-foreground mb-2">
                   Image Preview <span className="text-muted-foreground/70 font-normal ml-1">(Use Image Prompt to generate)</span>
                 </div>
-                <div className="relative w-full aspect-video bg-muted/20 rounded-xl border-2 border-dashed border-border overflow-hidden flex items-center justify-center group">
+                <div className="group relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-muted/20 xl:min-h-0 xl:flex-1 xl:aspect-auto">
                   {previewUrl ? (
                     <>
                       <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
@@ -302,48 +302,44 @@ export default function Results() {
             </div>
 
             {/* Prompts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               {/* Image Prompt */}
-              <Card className="shadow-sm border-border flex flex-col">
-                <CardHeader className="p-4 border-b">
+              <Card className="flex flex-col gap-0 border-border py-0 shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between gap-3 border-b p-3">
                   <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-foreground">
                     <ImageIcon className="w-4 h-4 text-primary" />
-                    Image Prompt <span className="text-muted-foreground font-normal normal-case tracking-normal text-xs ml-1">(for Still Image)</span>
+                    Image Prompt
                   </CardTitle>
+                  <Button variant="outline" size="sm" className="h-7 gap-1.5 px-2 text-primary" onClick={() => handleCopy(activeScene.imagePrompt, "Image Prompt")}>
+                    <Copy className="size-3" /> Copy
+                  </Button>
                 </CardHeader>
                 <CardContent className="p-0 flex-1 relative flex flex-col">
                   <Textarea
                     value={activeScene.imagePrompt}
                     onChange={(e) => handleSceneUpdate({ imagePrompt: e.target.value })}
-                    className="min-h-[140px] p-4 border-none resize-none focus-visible:ring-0 text-[13px] leading-relaxed text-foreground/80 bg-transparent"
+                    className="min-h-[120px] resize-none border-none bg-transparent p-3 text-[13px] leading-relaxed text-foreground/80 focus-visible:ring-0"
                   />
-                  <div className="mt-auto flex justify-end border-t border-border bg-muted/30 p-3">
-                    <Button variant="outline" size="sm" className="text-primary border-primary/20 bg-card gap-2" onClick={() => handleCopy(activeScene.imagePrompt, "Image Prompt")}>
-                      <Copy className="w-3 h-3" /> Copy Image Prompt
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
 
               {/* Video Prompt */}
-              <Card className="shadow-sm border-border flex flex-col">
-                <CardHeader className="p-4 border-b">
+              <Card className="flex flex-col gap-0 border-border py-0 shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between gap-3 border-b p-3">
                   <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-foreground">
                     <Video className="w-4 h-4 text-primary" />
-                    Video Prompt <span className="text-muted-foreground font-normal normal-case tracking-normal text-xs ml-1">(for Motion)</span>
+                    Video Prompt
                   </CardTitle>
+                  <Button variant="outline" size="sm" className="h-7 gap-1.5 px-2 text-primary" onClick={() => handleCopy(activeScene.videoPrompt, "Video Prompt")}>
+                    <Copy className="size-3" /> Copy
+                  </Button>
                 </CardHeader>
                 <CardContent className="p-0 flex-1 relative flex flex-col">
                   <Textarea
                     value={activeScene.videoPrompt}
                     onChange={(e) => handleSceneUpdate({ videoPrompt: e.target.value })}
-                    className="min-h-[140px] p-4 border-none resize-none focus-visible:ring-0 text-[13px] leading-relaxed text-foreground/80 bg-transparent"
+                    className="min-h-[120px] resize-none border-none bg-transparent p-3 text-[13px] leading-relaxed text-foreground/80 focus-visible:ring-0"
                   />
-                  <div className="mt-auto flex justify-end border-t border-border bg-muted/30 p-3">
-                    <Button variant="outline" size="sm" className="text-primary border-primary/20 bg-card gap-2" onClick={() => handleCopy(activeScene.videoPrompt, "Video Prompt")}>
-                      <Copy className="w-3 h-3" /> Copy Video Prompt
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
             </div>

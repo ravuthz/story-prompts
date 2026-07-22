@@ -11,7 +11,8 @@ export default function History() {
 
   const handleOpenProject = (id: string) => {
     setCurrentProject(id);
-    navigate(`/results/${id}`);
+    const project = projects.find((item) => item.id === id);
+    navigate(project?.scenes.length ? `/results/${id}` : "/builder");
   };
 
   return (

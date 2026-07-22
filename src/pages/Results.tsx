@@ -20,7 +20,7 @@ export default function Results() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { projects, updateProject } = useProjectStore();
+  const { projects, updateProject, setCurrentProject } = useProjectStore();
 
   const project = projects.find(p => p.id === projectId);
 
@@ -52,11 +52,21 @@ export default function Results() {
     loadPreview();
   }, [activeScene?.previewImageId]);
 
-  if (!project || !activeScene) {
+  if (!project) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
         <h2 className="text-2xl font-bold">Project Not Found</h2>
         <Button onClick={() => navigate("/")}>Return to Dashboard</Button>
+      </div>
+    );
+  }
+
+  if (!activeScene) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center space-y-4 p-8 text-center">
+        <h2 className="text-2xl font-bold">Draft ready to continue</h2>
+        <p className="max-w-md text-muted-foreground">This project has been saved but does not have generated scenes yet.</p>
+        <Button onClick={() => { setCurrentProject(project.id); navigate("/builder"); }}>Continue in Builder</Button>
       </div>
     );
   }

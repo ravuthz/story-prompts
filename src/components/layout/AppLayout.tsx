@@ -114,7 +114,7 @@ export default function AppLayout() {
             {currentProject && (
               <div className="mt-8 mb-4">
                 <div className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Current Project</div>
-                <Link to={`/results/${currentProject.id}`} className="flex items-center gap-2.5 rounded-lg border bg-muted/30 p-2.5 transition-colors hover:bg-muted">
+                <Link to={currentProject.scenes.length ? `/results/${currentProject.id}` : "/builder"} className="flex items-center gap-2.5 rounded-lg border bg-muted/30 p-2.5 transition-colors hover:bg-muted">
                   <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary text-primary-foreground/60">
                      <Film className="w-5 h-5" />
                   </div>

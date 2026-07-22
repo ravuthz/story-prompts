@@ -6,10 +6,11 @@ import { useNavigate } from "react-router-dom";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { ProjectSettings } from "@/types";
 
-const predefinedTemplates: { title: string; description: string; settings: Partial<ProjectSettings> }[] = [
+const predefinedTemplates: { title: string; description: string; thumbnail: string; settings: Partial<ProjectSettings> }[] = [
   {
     title: "Cinematic Short Film",
     description: "Standard dramatic structure for a 5-scene short film.",
+    thumbnail: "/templates/cinematic-short-film.png",
     settings: {
       numberOfScenes: 5,
       movieType: "Short Film",
@@ -21,6 +22,7 @@ const predefinedTemplates: { title: string; description: string; settings: Parti
   {
     title: "Vertical Micro Drama",
     description: "Fast-paced TikTok/Reels format optimized for phone screens.",
+    thumbnail: "/templates/vertical-micro-drama.png",
     settings: {
       numberOfScenes: 8,
       movieType: "Micro Drama",
@@ -34,6 +36,7 @@ const predefinedTemplates: { title: string; description: string; settings: Parti
   {
     title: "Music Video",
     description: "Highly stylized, rhythmic cuts with strong visual themes.",
+    thumbnail: "/templates/music-video.png",
     settings: {
       numberOfScenes: 10,
       movieType: "Music Video",
@@ -46,6 +49,7 @@ const predefinedTemplates: { title: string; description: string; settings: Parti
   {
     title: "Pixar-inspired Animation",
     description: "Family-friendly 3D style with soft lighting and expressive characters.",
+    thumbnail: "/templates/family-animation.png",
     settings: {
       numberOfScenes: 5,
       movieType: "Animation",
@@ -81,8 +85,16 @@ export default function Templates() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {predefinedTemplates.map((template, idx) => (
-          <Card key={idx} className="flex flex-col hover:border-primary/50 transition-colors">
-            <CardHeader>
+          <Card key={idx} className="group flex flex-col overflow-hidden transition-colors hover:border-primary/50">
+            <div className="aspect-video overflow-hidden bg-muted">
+              <img
+                src={template.thumbnail}
+                alt={`${template.title} template preview`}
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                loading="lazy"
+              />
+            </div>
+            <CardHeader className="pb-3">
               <CardTitle className="text-xl">{template.title}</CardTitle>
               <CardDescription className="mt-2">{template.description}</CardDescription>
             </CardHeader>

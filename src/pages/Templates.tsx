@@ -47,7 +47,7 @@ export default function Templates() {
     <div className="mx-auto w-full max-w-7xl space-y-5 p-4 md:p-6">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {templates.map((template) => (
-          <Card key={template.title} className="group flex flex-col overflow-hidden transition-colors hover:border-primary/50">
+          <Card key={template.title} className="group flex flex-col gap-0 overflow-hidden py-0 transition-colors hover:border-primary/50">
             <div className="relative aspect-video overflow-hidden bg-muted">
               <img src={template.thumbnail} alt={`${template.title} template preview`} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/55 to-transparent px-3 pb-3 pt-12">

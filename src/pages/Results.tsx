@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { 
-  Copy, Download, Image as ImageIcon, Video, ArrowLeft, ArrowRight, Settings, 
+import {
+  Copy, Download, Image as ImageIcon, Video, ArrowLeft, ArrowRight, Settings,
   Edit2, FileText, Clock, Trash2, Sparkles, RefreshCw, X, Film, Users, Sun
 } from "lucide-react";
 
@@ -22,9 +22,9 @@ export default function Results() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { projects, updateProject } = useProjectStore();
-  
+
   const project = projects.find(p => p.id === projectId);
-  
+
   const [activeSceneIndex, setActiveSceneIndex] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,7 +82,7 @@ export default function Results() {
     const text = `SCENE ${String(activeScene.sceneNumber).padStart(2, '0')} — ${activeScene.title.toUpperCase()}\n\nSummary: ${activeScene.summary}\n\nIMAGE PROMPT:\n${activeScene.imagePrompt}\n\nVIDEO PROMPT:\n${activeScene.videoPrompt}\n\nNEGATIVE PROMPT:\n${activeScene.negativePrompt}`;
     handleCopy(text, "Full Scene");
   };
-  
+
   const copyAllScenes = () => {
     let allText = "";
     project.scenes.forEach(scene => {
@@ -121,7 +121,7 @@ export default function Results() {
           <h2 className="font-bold text-[15px] text-slate-900">Project & Story Settings</h2>
           <Button variant="outline" size="sm" className="h-7 text-xs rounded-full px-3" onClick={() => navigate("/builder")}>Edit</Button>
         </div>
-        
+
         <div className="p-5 space-y-5 text-[13px]">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-2 text-slate-500"><Edit2 className="w-4 h-4" /> Title</span>
@@ -172,7 +172,7 @@ export default function Results() {
             <span className="font-semibold text-slate-900">{project.settings.pacing}</span>
           </div>
         </div>
-        
+
         <div className="p-5 mt-auto">
           <Button variant="outline" className="w-full text-slate-600 gap-2 border-slate-200">
             <RefreshCw className="w-4 h-4" /> View All Settings
@@ -183,12 +183,12 @@ export default function Results() {
       {/* Main Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <div className="p-6 md:p-10 max-w-[1400px] mx-auto w-full space-y-6">
-          
+
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2 text-slate-900">
-                <Sparkles className="w-6 h-6 text-[#5436D6]" /> 
+                <Sparkles className="w-6 h-6 text-[#5436D6]" />
                 Generated Storyboard Template
               </h1>
               <p className="text-sm text-slate-500 mt-1 flex items-center gap-2">
@@ -213,11 +213,10 @@ export default function Results() {
                   <button
                     key={scene.id}
                     onClick={() => handleSceneChange(index)}
-                    className={`flex-1 min-w-[120px] px-6 py-4 text-sm font-semibold transition-colors border-r last:border-r-0 ${
-                      index === activeSceneIndex
-                        ? "bg-[#5436D6] text-white"
-                        : "text-slate-600 hover:bg-slate-50 bg-white"
-                    }`}
+                    className={`flex-1 min-w-[120px] px-6 py-4 text-sm font-semibold transition-colors border-r last:border-r-0 ${index === activeSceneIndex
+                      ? "bg-[#5436D6] text-white"
+                      : "text-slate-600 hover:bg-slate-50 bg-white"
+                      }`}
                   >
                     Scene {scene.sceneNumber}
                   </button>
@@ -229,21 +228,21 @@ export default function Results() {
 
           {/* Scene Content Container */}
           <div className="bg-white border rounded-xl shadow-sm p-8 space-y-8 relative">
-            
+
             {/* Scene Header & Preview */}
             <div className="flex flex-col xl:flex-row gap-8">
               {/* Info */}
               <div className="flex-1 space-y-4">
                 <div className="flex items-center gap-4">
-                  <Badge className="bg-[#5436D6]/10 text-[#5436D6] hover:bg-[#5436D6]/20 text-lg px-4 py-1.5 rounded-lg border-none shadow-none font-semibold">
+                  {/* <Badge className="bg-[#5436D6]/10 text-[#5436D6] hover:bg-[#5436D6]/20 text-lg px-4 py-1.5 rounded-lg border-none shadow-none font-semibold">
                     Scene {activeScene.sceneNumber}
-                  </Badge>
+                  </Badge> */}
                   <h2 className="text-2xl font-bold text-slate-900">{activeScene.title}</h2>
                 </div>
                 <p className="text-[15px] leading-relaxed text-slate-600">
                   {activeScene.summary}
                 </p>
-                
+
                 <div className="flex gap-4 pt-2">
                   <div className="bg-[#F8FAFC] border rounded-lg p-3 min-w-[100px]">
                     <div className="text-[11px] text-slate-400 font-medium uppercase mb-1">Location</div>
@@ -263,7 +262,7 @@ export default function Results() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Image Preview */}
               <div className="xl:w-[500px] shrink-0">
                 <div className="text-[12px] font-semibold text-slate-900 mb-2">
@@ -307,7 +306,7 @@ export default function Results() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 flex-1 relative flex flex-col">
-                  <Textarea 
+                  <Textarea
                     value={activeScene.imagePrompt}
                     onChange={(e) => handleSceneUpdate({ imagePrompt: e.target.value })}
                     className="min-h-[180px] p-5 border-none resize-none focus-visible:ring-0 text-[13px] leading-relaxed text-slate-700 bg-transparent"
@@ -329,7 +328,7 @@ export default function Results() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 flex-1 relative flex flex-col">
-                  <Textarea 
+                  <Textarea
                     value={activeScene.videoPrompt}
                     onChange={(e) => handleSceneUpdate({ videoPrompt: e.target.value })}
                     className="min-h-[180px] p-5 border-none resize-none focus-visible:ring-0 text-[13px] leading-relaxed text-slate-700 bg-transparent"
@@ -345,7 +344,7 @@ export default function Results() {
 
             {/* Technical Details Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
-              
+
               {/* Camera */}
               <div className="space-y-4">
                 <h4 className="font-bold flex items-center gap-2 text-sm text-slate-900 uppercase tracking-wider">
@@ -367,9 +366,9 @@ export default function Results() {
                   <Users className="w-4 h-4 text-[#5436D6]" /> Characters & Continuity
                 </h4>
                 <div className="space-y-3 text-[13px]">
-                  {activeScene.characters.slice(0,4).map((char, i) => (
+                  {activeScene.characters.slice(0, 4).map((char, i) => (
                     <div key={i} className="flex justify-between border-b pb-2">
-                      <span className="text-slate-500 font-medium whitespace-nowrap mr-4">{char.role || char.name}</span> 
+                      <span className="text-slate-500 font-medium whitespace-nowrap mr-4">{char.role || char.name}</span>
                       <span className="font-semibold text-slate-900 text-right truncate" title={char.name}>{char.name}</span>
                     </div>
                   ))}
@@ -415,18 +414,18 @@ export default function Results() {
 
             </div>
           </div>
-          
+
           {/* Bottom Action Bar */}
           <div className="flex items-center justify-between pb-10">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="text-slate-500 hover:text-slate-900 gap-2"
               onClick={() => handleSceneChange(Math.max(0, activeSceneIndex - 1))}
               disabled={activeSceneIndex === 0}
             >
               <ArrowLeft className="w-4 h-4" /> Previous Scene
             </Button>
-            
+
             <div className="flex items-center gap-4">
               <Button variant="outline" className="border-slate-200 text-[#5436D6] hover:text-[#5436D6] hover:bg-slate-50 gap-2 font-semibold px-6">
                 <RefreshCw className="w-4 h-4" /> Regenerate Template
@@ -435,8 +434,8 @@ export default function Results() {
                 <Copy className="w-4 h-4" /> Copy Full Scene
               </Button>
             </div>
-            
-            <Button 
+
+            <Button
               className="bg-[#5436D6] hover:bg-[#4323c0] text-white gap-2 px-8 font-semibold"
               onClick={() => handleSceneChange(Math.min(project.scenes.length - 1, activeSceneIndex + 1))}
               disabled={activeSceneIndex === project.scenes.length - 1}

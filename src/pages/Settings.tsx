@@ -23,6 +23,7 @@ export default function Settings() {
   const [apiKeyInput, setApiKeyInput] = useState(settings.geminiApiKey);
   const [rememberKey, setRememberKey] = useState(settings.rememberApiKey);
   const [geminiModel, setGeminiModel] = useState(settings.geminiModel);
+  const [generateAction, setGenerateAction] = useState(settings.generateAction || "ask");
   const [availableModels, setAvailableModels] = useState<GeminiModelOption[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [masterPromptInput, setMasterPromptInput] = useState(settings.masterPromptOverride || defaultMasterPromptTemplate);
@@ -32,6 +33,7 @@ export default function Settings() {
     settings.setGeminiApiKey(apiKeyInput);
     settings.setRememberApiKey(rememberKey);
     settings.setGeminiModel(geminiModel);
+    settings.setGenerateAction(generateAction);
     toast.success("API settings saved locally");
   };
 
@@ -192,6 +194,21 @@ export default function Settings() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">Auto discovers compatible models and tries Flash models first.</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="generateAction">Generate button behavior</Label>
+              <Select value={generateAction} onValueChange={(value) => {
+                if (value === "ask" || value === "generate" || value === "copy") setGenerateAction(value);
+              }}>
+                <SelectTrigger id="generateAction"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ask">Always ask</SelectItem>
+                  <SelectItem value="generate">Generate directly</SelectItem>
+                  <SelectItem value="copy">Open master prompt</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Used when an API key is available. Without a key, the master prompt always opens.</p>
             </div>
 
           </CardContent>

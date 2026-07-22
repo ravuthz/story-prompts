@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
-import { Loader2, Wand2, Copy, Key, Settings, Video, Image as ImageIcon, Users, Save, RotateCcw, Check } from "lucide-react";
+import { Loader2, Wand2, Copy, Key, Settings, Video, Image as ImageIcon, Users, Save, RotateCcw, Check, FileText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 
 import { useProjectStore } from "@/stores/useProjectStore";
@@ -148,10 +149,12 @@ export default function Builder() {
   const geminiApiKey = useSettingsStore(state => state.geminiApiKey);
   const masterPromptOverride = useSettingsStore(state => state.masterPromptOverride);
   const geminiModel = useSettingsStore(state => state.geminiModel);
+  const generateAction = useSettingsStore(state => state.generateAction || "ask");
   const [isGenerating, setIsGenerating] = useState(false);
   const [masterPrompt, setMasterPrompt] = useState("");
   const [isPromptOpen, setIsPromptOpen] = useState(false);
   const [isDraftSaved, setIsDraftSaved] = useState(false);
+  const [isGenerateMenuOpen, setIsGenerateMenuOpen] = useState(false);
   const hasApiKey = parseGeminiApiKeys(geminiApiKey).length > 0;
 
   const currentProject = getCurrentProject();
@@ -211,13 +214,17 @@ export default function Builder() {
     }
   };
 
-  const handleCreate = handleSubmit((data) => {
-    if (hasApiKey) {
-      return onSubmit(data);
-    }
+  const handleDirectGenerate = handleSubmit(onSubmit);
+
+  const handleOpenMasterPrompt = handleSubmit((data) => {
     setMasterPrompt(buildMasterPrompt(data, masterPromptOverride || undefined));
     setIsPromptOpen(true);
   });
+
+  const handleGenerateButton = () => {
+    if (!hasApiKey || generateAction === "copy") void handleOpenMasterPrompt();
+    if (hasApiKey && generateAction === "generate") void handleDirectGenerate();
+  };
 
   const handleCopyPrompt = async () => {
     try {
@@ -319,17 +326,35 @@ export default function Builder() {
                 >
                   <RotateCcw className="size-4" />
                 </Button>
-                <Button
-                  type="button"
-                  variant="default"
-                  size="icon"
-                  onClick={handleCreate}
-                  disabled={isGenerating}
-                  aria-label={isGenerating ? "Generating storyboard" : hasApiKey ? "Generate storyboard" : "Create master prompt"}
-                  title={isGenerating ? "Generating…" : hasApiKey ? "Generate storyboard" : "Create master prompt"}
-                >
-                  {isGenerating ? <Loader2 className="size-4 animate-spin" /> : <Wand2 className="size-4" />}
-                </Button>
+                <Popover open={isGenerateMenuOpen} onOpenChange={(open) => setIsGenerateMenuOpen(open && hasApiKey && generateAction === "ask")}>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="default"
+                        size="icon"
+                        onClick={handleGenerateButton}
+                        disabled={isGenerating}
+                        aria-label={isGenerating ? "Generating storyboard" : "Create storyboard"}
+                        title={isGenerating ? "Generating…" : "Create storyboard"}
+                      />
+                    }
+                  >
+                    {isGenerating ? <Loader2 className="size-4 animate-spin" /> : <Wand2 className="size-4" />}
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-64">
+                    <PopoverHeader>
+                      <PopoverTitle>Choose an action</PopoverTitle>
+                      <PopoverDescription>Generate here or use the master prompt elsewhere.</PopoverDescription>
+                    </PopoverHeader>
+                    <Button type="button" size="sm" className="justify-start gap-2" onClick={() => { setIsGenerateMenuOpen(false); void handleDirectGenerate(); }}>
+                      <Wand2 className="size-4" /> Generate storyboard
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" className="justify-start gap-2" onClick={() => { setIsGenerateMenuOpen(false); void handleOpenMasterPrompt(); }}>
+                      <FileText className="size-4" /> Copy master prompt
+                    </Button>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
             <div className="space-y-6">

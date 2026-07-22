@@ -7,6 +7,7 @@ interface SettingsState {
   masterPromptOverride: string;
   templatesOverride: string;
   geminiModel: string;
+  generateAction: "ask" | "generate" | "copy";
   theme: "light" | "dark" | "system";
   setGeminiApiKey: (key: string) => void;
   setRememberApiKey: (remember: boolean) => void;
@@ -14,6 +15,7 @@ interface SettingsState {
   setTemplatesOverride: (value: string) => void;
   resetConfiguration: () => void;
   setGeminiModel: (model: string) => void;
+  setGenerateAction: (action: "ask" | "generate" | "copy") => void;
   setTheme: (theme: "light" | "dark" | "system") => void;
   clearData: () => void;
 }
@@ -26,6 +28,7 @@ export const useSettingsStore = create<SettingsState>()(
       masterPromptOverride: "",
       templatesOverride: "",
       geminiModel: "auto",
+      generateAction: "ask",
       theme: "system",
       setGeminiApiKey: (key) => set({ geminiApiKey: key }),
       setRememberApiKey: (remember) => set({ rememberApiKey: remember }),
@@ -33,6 +36,7 @@ export const useSettingsStore = create<SettingsState>()(
       setTemplatesOverride: (value) => set({ templatesOverride: value }),
       resetConfiguration: () => set({ masterPromptOverride: "", templatesOverride: "" }),
       setGeminiModel: (model) => set({ geminiModel: model }),
+      setGenerateAction: (action) => set({ generateAction: action }),
       setTheme: (theme) => set({ theme }),
       clearData: () => set({ geminiApiKey: "", rememberApiKey: false }),
     }),
@@ -45,6 +49,7 @@ export const useSettingsStore = create<SettingsState>()(
         masterPromptOverride: state.masterPromptOverride,
         templatesOverride: state.templatesOverride,
         geminiModel: state.geminiModel,
+        generateAction: state.generateAction,
       }),
     }
   )

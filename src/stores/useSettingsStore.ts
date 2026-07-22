@@ -4,9 +4,14 @@ import { persist } from "zustand/middleware";
 interface SettingsState {
   geminiApiKey: string;
   rememberApiKey: boolean;
+  masterPromptOverride: string;
+  templatesOverride: string;
   theme: "light" | "dark" | "system";
   setGeminiApiKey: (key: string) => void;
   setRememberApiKey: (remember: boolean) => void;
+  setMasterPromptOverride: (value: string) => void;
+  setTemplatesOverride: (value: string) => void;
+  resetConfiguration: () => void;
   setTheme: (theme: "light" | "dark" | "system") => void;
   clearData: () => void;
 }
@@ -16,9 +21,14 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       geminiApiKey: "",
       rememberApiKey: false,
+      masterPromptOverride: "",
+      templatesOverride: "",
       theme: "system",
       setGeminiApiKey: (key) => set({ geminiApiKey: key }),
       setRememberApiKey: (remember) => set({ rememberApiKey: remember }),
+      setMasterPromptOverride: (value) => set({ masterPromptOverride: value }),
+      setTemplatesOverride: (value) => set({ templatesOverride: value }),
+      resetConfiguration: () => set({ masterPromptOverride: "", templatesOverride: "" }),
       setTheme: (theme) => set({ theme }),
       clearData: () => set({ geminiApiKey: "", rememberApiKey: false }),
     }),
@@ -28,6 +38,8 @@ export const useSettingsStore = create<SettingsState>()(
         geminiApiKey: state.rememberApiKey ? state.geminiApiKey : "",
         rememberApiKey: state.rememberApiKey,
         theme: state.theme,
+        masterPromptOverride: state.masterPromptOverride,
+        templatesOverride: state.templatesOverride,
       }),
     }
   )

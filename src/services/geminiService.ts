@@ -1,72 +1,19 @@
 import { ProjectSettings, StoryboardScene } from "@/types";
+import masterPromptConfig from "@/config/masterPrompt.json";
 
 export const parseGeminiApiKeys = (value: string): string[] =>
   [...new Set(value.split(/[\n,]+/).map((key) => key.trim()).filter(Boolean))];
 
-export const buildMasterPrompt = (settings: ProjectSettings): string => `You are an expert storyboard artist, cinematographer, and AI prompt engineer.
-I need you to generate a structured storyboard for a video project.
+export const defaultMasterPromptTemplate = masterPromptConfig.template;
 
-Project Title: ${settings.title}
-Concept: ${settings.storyConcept}
-Synopsis: ${settings.fullSynopsis}
-Number of Scenes: ${settings.numberOfScenes}
-Visual Style: ${settings.visualStyle}
-Aspect Ratio: ${settings.aspectRatio}
-Genre: ${settings.genre}
-Tone: ${settings.tone}
-Pacing: ${settings.pacing}
-Main Characters: ${settings.mainCharacters}
-Location: ${settings.location}
-Additional Instructions: ${settings.additionalInstructions}
+export const buildMasterPrompt = (settings: ProjectSettings, template = defaultMasterPromptTemplate): string =>
+  template.replace(/\{\{(\w+)\}\}/g, (_match, key: string) => {
+    const value = settings[key as keyof ProjectSettings];
+    return typeof value === "string" || typeof value === "number" ? String(value) : "";
+  });
 
-Generate exactly ${settings.numberOfScenes} scenes. Return the result strictly as a JSON array of objects. 
-Do not include markdown blocks like \`\`\`json in your response, just the raw JSON array.
-
-Each object must follow this exact TypeScript interface:
-{
-  "id": "unique-string",
-  "sceneNumber": number,
-  "title": "string",
-  "summary": "string",
-  "storyBeat": "string",
-  "purpose": "string",
-  "duration": number,
-  "location": "string",
-  "timeOfDay": "string",
-  "weather": "string",
-  "characters": [{
-    "characterId": "string", "name": "string", "role": "string",
-    "currentOutfit": "string", "position": "string", "expression": "string",
-    "action": "string", "props": "string", "continuityNotes": "string"
-  }],
-  "imagePrompt": "detailed image-generation prompt",
-  "videoPrompt": "detailed video-generation prompt focused on movement and action",
-  "negativePrompt": "things to exclude, comma separated",
-  "camera": {
-    "shotType": "string", "angle": "string", "framing": "string", "lens": "string",
-    "focalLength": "string", "movement": "string", "movementDuration": "string",
-    "stability": "string", "focus": "string", "depthOfField": "string",
-    "composition": "string", "duration": "string", "transition": "string"
-  },
-  "environment": {
-    "location": "string", "environment": "string", "time": "string", "weather": "string",
-    "lighting": "string", "mood": "string", "colorTone": "string",
-    "productionDesign": "string", "visualStyle": "string", "realism": "string",
-    "texture": "string", "atmosphere": "string"
-  },
-  "audio": {
-    "dialogue": "string", "narration": "string", "soundEffects": "string",
-    "backgroundAmbience": "string", "music": "string", "voiceDelivery": "string",
-    "lipSyncInstructions": "string"
-  },
-  "timing": [{ "timeRange": "string (e.g. 0.0-2.0s)", "description": "string" }],
-  "continuityNotes": ["string"]
-}
-
-Ensure the output is valid JSON, strictly follows the schema, preserves character and wardrobe continuity, and contains exactly ${settings.numberOfScenes} items.`;
-
-const generateWithKey = async (settings: ProjectSettings, apiKey: string): Promise<StoryboardScene[]> => {
-  const prompt = buildMasterPrompt(settings);
+const generateWithKey = async (settings: ProjectSettings, apiKey: string, promptTemplate?: string): Promise<StoryboardScene[]> => {
+  const prompt = buildMasterPrompt(settings, promptTemplate);
 
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`, {
     method: "POST",
@@ -93,7 +40,7 @@ const generateWithKey = async (settings: ProjectSettings, apiKey: string): Promi
   return parsed;
 };
 
-export const generateWithGemini = async (settings: ProjectSettings, apiKeyInput: string): Promise<StoryboardScene[]> => {
+export const generateWithGemini = async (settings: ProjectSettings, apiKeyInput: string, promptTemplate?: string): Promise<StoryboardScene[]> => {
   const apiKeys = parseGeminiApiKeys(apiKeyInput);
   if (apiKeys.length === 0) {
     throw new Error("Gemini API key is required");
@@ -102,7 +49,7 @@ export const generateWithGemini = async (settings: ProjectSettings, apiKeyInput:
   let lastError: unknown;
   for (const apiKey of apiKeys) {
     try {
-      return await generateWithKey(settings, apiKey);
+      return await generateWithKey(settings, apiKey, promptTemplate);
     } catch (error) {
       lastError = error;
     }

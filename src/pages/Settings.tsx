@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Key, Save, Trash2, Shield, Download } from "lucide-react";
+import { Key, Save, Trash2, Shield, Download, RotateCcw, Braces } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useCharacterStore } from "@/stores/useCharacterStore";
+import defaultTemplates from "@/config/templates.json";
+import { defaultMasterPromptTemplate } from "@/services/geminiService";
 
 export default function Settings() {
   const settings = useSettingsStore();
@@ -19,6 +21,8 @@ export default function Settings() {
   
   const [apiKeyInput, setApiKeyInput] = useState(settings.geminiApiKey);
   const [rememberKey, setRememberKey] = useState(settings.rememberApiKey);
+  const [masterPromptInput, setMasterPromptInput] = useState(settings.masterPromptOverride || defaultMasterPromptTemplate);
+  const [templatesInput, setTemplatesInput] = useState(settings.templatesOverride || JSON.stringify(defaultTemplates, null, 2));
 
   const handleSaveApiSettings = () => {
     settings.setGeminiApiKey(apiKeyInput);
@@ -33,6 +37,37 @@ export default function Settings() {
     }
   };
 
+  const handleSaveConfiguration = () => {
+    if (!masterPromptInput.trim()) {
+      toast.error("Master prompt cannot be empty");
+      return;
+    }
+    try {
+      const parsed = JSON.parse(templatesInput);
+      const isValid = Array.isArray(parsed) && parsed.length > 0 && parsed.every((template) =>
+        typeof template?.title === "string" &&
+        typeof template.description === "string" &&
+        typeof template.thumbnail === "string" &&
+        typeof template.settings === "object" && template.settings !== null
+      );
+      if (!isValid) throw new Error();
+    } catch {
+      toast.error("Templates must be a non-empty JSON array");
+      return;
+    }
+    settings.setMasterPromptOverride(masterPromptInput === defaultMasterPromptTemplate ? "" : masterPromptInput);
+    const normalizedDefault = JSON.stringify(defaultTemplates, null, 2);
+    settings.setTemplatesOverride(templatesInput === normalizedDefault ? "" : templatesInput);
+    toast.success("Configuration overrides saved");
+  };
+
+  const handleResetConfiguration = () => {
+    setMasterPromptInput(defaultMasterPromptTemplate);
+    setTemplatesInput(JSON.stringify(defaultTemplates, null, 2));
+    settings.resetConfiguration();
+    toast.success("Configuration reset to JSON defaults");
+  };
+
   const handleExportAllData = () => {
     const backup = {
       exportedAt: new Date().toISOString(),
@@ -42,6 +77,8 @@ export default function Settings() {
       preferences: {
         theme: settings.theme,
         rememberApiKey: settings.rememberApiKey,
+        masterPromptOverride: settings.masterPromptOverride,
+        templatesOverride: settings.templatesOverride,
       },
     };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
@@ -115,6 +152,28 @@ export default function Settings() {
             <Button onClick={handleSaveApiSettings} className="gap-2">
               <Save className="w-4 h-4" /> Save API Settings
             </Button>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Braces className="size-5 text-primary" /> Prompt & Template Configuration</CardTitle>
+            <CardDescription>Override the JSON defaults used by master prompts and the template catalog.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="masterPromptConfig">Master prompt template</Label>
+              <Textarea id="masterPromptConfig" value={masterPromptInput} onChange={(event) => setMasterPromptInput(event.target.value)} className="field-sizing-fixed min-h-56 font-mono text-xs" spellCheck={false} />
+              <p className="text-xs text-muted-foreground">Use placeholders such as {"{{title}}"}, {"{{storyConcept}}"}, and {"{{numberOfScenes}}"}.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="templatesConfig">Templates JSON</Label>
+              <Textarea id="templatesConfig" value={templatesInput} onChange={(event) => setTemplatesInput(event.target.value)} className="field-sizing-fixed min-h-72 font-mono text-xs" spellCheck={false} />
+            </div>
+          </CardContent>
+          <CardFooter className="flex-wrap gap-2 border-t bg-muted/20 pt-4">
+            <Button onClick={handleSaveConfiguration} className="gap-2"><Save className="size-4" /> Save Overrides</Button>
+            <Button variant="outline" onClick={handleResetConfiguration} className="gap-2"><RotateCcw className="size-4" /> Reset to Default</Button>
           </CardFooter>
         </Card>
 

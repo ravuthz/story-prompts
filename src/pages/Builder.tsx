@@ -146,6 +146,7 @@ export default function Builder() {
   const location = useLocation();
   const { addProject, updateProject, getCurrentProject, setCurrentProject } = useProjectStore();
   const geminiApiKey = useSettingsStore(state => state.geminiApiKey);
+  const masterPromptOverride = useSettingsStore(state => state.masterPromptOverride);
   const [isGenerating, setIsGenerating] = useState(false);
   const [masterPrompt, setMasterPrompt] = useState("");
   const [isPromptOpen, setIsPromptOpen] = useState(false);
@@ -179,7 +180,7 @@ export default function Builder() {
 
     try {
       toast.info("Generating with Gemini...");
-      const scenes = await generateWithGemini(data, geminiApiKey);
+      const scenes = await generateWithGemini(data, geminiApiKey, masterPromptOverride || undefined);
       toast.success("Generated successfully!");
 
       const project: StoryboardProject = {
@@ -213,7 +214,7 @@ export default function Builder() {
     if (hasApiKey) {
       return onSubmit(data);
     }
-    setMasterPrompt(buildMasterPrompt(data));
+    setMasterPrompt(buildMasterPrompt(data, masterPromptOverride || undefined));
     setIsPromptOpen(true);
   });
 

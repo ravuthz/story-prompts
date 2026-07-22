@@ -45,11 +45,6 @@ export default function Templates() {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-5 p-4 md:p-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Templates</h1>
-        <p className="mt-1 text-muted-foreground">Start quickly with pre-configured project settings.</p>
-      </div>
-
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {templates.map((template) => (
           <Card key={template.title} className="group flex flex-col overflow-hidden transition-colors hover:border-primary/50">

@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "sonner";
 
 import { useProjectStore } from "@/stores/useProjectStore";
@@ -235,7 +234,7 @@ export default function Builder() {
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-8 w-full">
+    <div className="p-6 md:p-10 w-full space-y-8 h-full overflow-y-auto">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Storyboard Builder</h1>
         <p className="text-muted-foreground mt-1">Configure your project settings to generate prompts.</p>
@@ -266,17 +265,15 @@ export default function Builder() {
       </div>
 
       <form className="space-y-8">
-        <Accordion className="w-full">
+        <div className="w-full space-y-8 pb-12">
           
           {/* Project Settings */}
-          <AccordionItem value="project" className="bg-card border rounded-lg mb-4 px-6 overflow-hidden">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-2 text-lg font-semibold">
-                <Settings className="w-5 h-5 text-primary" />
+          <section className="bg-white border border-slate-200 rounded-xl px-6 py-6 shadow-sm">
+            <div className="flex items-center gap-2 text-lg font-bold text-slate-900 mb-6 border-b pb-4">
+              <Settings className="w-5 h-5 text-[#5436D6]" />
                 Project & Story Settings
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-4 pb-6 space-y-6">
+            </div>
+            <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>Project Title</Label>
@@ -345,18 +342,16 @@ export default function Builder() {
                   <Input {...register("pacing")} placeholder="Fast, Slow burn..." />
                 </div>
               </div>
-            </AccordionContent>
-          </AccordionItem>
+            </div>
+          </section>
 
           {/* Visual Settings */}
-          <AccordionItem value="visual" className="bg-card border rounded-lg mb-4 px-6 overflow-hidden">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-2 text-lg font-semibold">
-                <ImageIcon className="w-5 h-5 text-primary" />
+          <section className="bg-white border border-slate-200 rounded-xl px-6 py-6 shadow-sm">
+            <div className="flex items-center gap-2 text-lg font-bold text-slate-900 mb-6 border-b pb-4">
+              <ImageIcon className="w-5 h-5 text-[#5436D6]" />
                 Visual Settings
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-4 pb-6 space-y-6">
+            </div>
+            <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label>Visual Style</Label>
@@ -401,18 +396,16 @@ export default function Builder() {
                   <Input {...register("location")} placeholder="Abandoned warehouse..." />
                 </div>
               </div>
-            </AccordionContent>
-          </AccordionItem>
+            </div>
+          </section>
 
           {/* Camera Settings */}
-          <AccordionItem value="camera" className="bg-card border rounded-lg mb-4 px-6 overflow-hidden">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-2 text-lg font-semibold">
-                <Video className="w-5 h-5 text-primary" />
+          <section className="bg-white border border-slate-200 rounded-xl px-6 py-6 shadow-sm">
+            <div className="flex items-center gap-2 text-lg font-bold text-slate-900 mb-6 border-b pb-4">
+              <Video className="w-5 h-5 text-[#5436D6]" />
                 Camera & Shot Settings
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-4 pb-6 space-y-6">
+            </div>
+            <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label>Default Shot Type</Label>
@@ -453,18 +446,16 @@ export default function Builder() {
                   <Input {...register("composition")} placeholder="Rule of thirds..." />
                 </div>
               </div>
-            </AccordionContent>
-          </AccordionItem>
+            </div>
+          </section>
 
           {/* Story Controls */}
-          <AccordionItem value="story" className="bg-card border rounded-lg px-6 overflow-hidden">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-2 text-lg font-semibold">
-                <Users className="w-5 h-5 text-primary" />
+          <section className="bg-white border border-slate-200 rounded-xl px-6 py-6 shadow-sm">
+            <div className="flex items-center gap-2 text-lg font-bold text-slate-900 mb-6 border-b pb-4">
+              <Users className="w-5 h-5 text-[#5436D6]" />
                 Story & Character Controls
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-4 pb-6 space-y-6">
+            </div>
+            <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>Main Characters</Label>
@@ -479,10 +470,9 @@ export default function Builder() {
                   <Textarea {...register("additionalInstructions")} placeholder="Any specific requirements for the AI..." />
                 </div>
               </div>
-            </AccordionContent>
-          </AccordionItem>
-
-        </Accordion>
+            </div>
+          </section>
+        </div>
       </form>
     </div>
   );

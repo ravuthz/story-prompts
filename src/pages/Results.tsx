@@ -234,9 +234,9 @@ export default function Results() {
               {/* Info */}
               <div className="flex-1 space-y-4">
                 <div className="flex items-center gap-4">
-                  {/* <Badge className="bg-[#5436D6]/10 text-[#5436D6] hover:bg-[#5436D6]/20 text-lg px-4 py-1.5 rounded-lg border-none shadow-none font-semibold">
+                  <Badge className="bg-[#5436D6]/10 text-[#5436D6] hover:bg-[#5436D6]/20 text-lg px-4 py-1.5 rounded-lg border-none shadow-none font-semibold">
                     Scene {activeScene.sceneNumber}
-                  </Badge> */}
+                  </Badge>
                   <h2 className="text-2xl font-bold text-slate-900">{activeScene.title}</h2>
                 </div>
                 <p className="text-[15px] leading-relaxed text-slate-600">

@@ -58,6 +58,82 @@ const predefinedTemplates: { title: string; description: string; thumbnail: stri
       aspectRatio: "16:9 Landscape",
       lightingStyle: "Soft and Warm"
     }
+  },
+  {
+    title: "Anime Adventure",
+    description: "Epic exploration with expressive heroes and cinematic anime environments.",
+    thumbnail: "/templates/anime-adventure.png",
+    settings: {
+      numberOfScenes: 8,
+      movieType: "Animation",
+      genre: "Fantasy / Adventure",
+      visualStyle: "Anime",
+      aspectRatio: "16:9 Landscape",
+      pacing: "Dynamic",
+      lightingStyle: "Cinematic Sunset",
+      colorPalette: "Sky Blue / Coral / Emerald"
+    }
+  },
+  {
+    title: "2D Cartoon Comedy",
+    description: "Bright slapstick storytelling with fast action and expressive cartoon timing.",
+    thumbnail: "/templates/cartoon-comedy.png",
+    settings: {
+      numberOfScenes: 7,
+      movieType: "Animation",
+      genre: "Comedy",
+      visualStyle: "2D Animation",
+      aspectRatio: "16:9 Landscape",
+      pacing: "Fast",
+      comedyLevel: "High",
+      colorPalette: "Bright Primary Colors"
+    }
+  },
+  {
+    title: "Watercolor Storybook",
+    description: "Gentle illustrated storytelling for magical, emotional, and child-friendly tales.",
+    thumbnail: "/templates/watercolor-storybook.png",
+    settings: {
+      numberOfScenes: 6,
+      movieType: "Animation",
+      genre: "Family / Fantasy",
+      visualStyle: "Watercolor",
+      aspectRatio: "16:9 Landscape",
+      pacing: "Gentle",
+      lightingStyle: "Soft Natural Light",
+      textureDetail: "Hand-painted paper texture"
+    }
+  },
+  {
+    title: "3D Fantasy Adventure",
+    description: "A colorful animated quest with magical worlds, heroes, and friendly creatures.",
+    thumbnail: "/templates/3d-fantasy-adventure.png",
+    settings: {
+      numberOfScenes: 8,
+      movieType: "Animation",
+      genre: "Fantasy / Adventure",
+      visualStyle: "Stylized 3D Animation",
+      aspectRatio: "16:9 Landscape",
+      pacing: "Energetic",
+      lightingStyle: "Magical Cinematic",
+      colorPalette: "Violet / Crystal Blue / Gold"
+    }
+  },
+  {
+    title: "Stop-Motion Cozy Tale",
+    description: "Handcrafted miniature storytelling with tactile characters and warm environments.",
+    thumbnail: "/templates/stop-motion-tale.png",
+    settings: {
+      numberOfScenes: 6,
+      movieType: "Animation",
+      genre: "Family / Slice of Life",
+      visualStyle: "Stylized 3D Animation",
+      aspectRatio: "16:9 Landscape",
+      pacing: "Gentle",
+      productionDesign: "Handcrafted felt, clay, and miniature sets",
+      textureDetail: "Visible handmade fibers and tactile materials",
+      colorPalette: "Autumn Orange / Mustard / Forest Green"
+    }
   }
 ];
 

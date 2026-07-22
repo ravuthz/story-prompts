@@ -258,7 +258,7 @@ export default function Builder() {
   });
 
   return (
-    <div className="p-4 md:p-6 w-full space-y-5 h-full overflow-y-auto">
+    <div className="mx-auto h-full w-full max-w-7xl space-y-5 overflow-y-auto p-4 md:p-6">
       <Dialog open={isPromptOpen} onOpenChange={setIsPromptOpen}>
         <DialogContent className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-4 sm:max-w-3xl">
           <DialogHeader>

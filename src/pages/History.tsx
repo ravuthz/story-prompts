@@ -16,7 +16,7 @@ export default function History() {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-5 w-full">
+    <div className="mx-auto w-full max-w-7xl space-y-5 p-4 md:p-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Project History</h1>

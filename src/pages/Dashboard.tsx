@@ -21,7 +21,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-5 w-full">
+    <div className="mx-auto w-full max-w-7xl space-y-5 p-4 md:p-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="col-span-1 md:col-span-2 border-primary/20 shadow-sm bg-primary/5">
           <CardHeader>

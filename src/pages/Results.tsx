@@ -191,7 +191,7 @@ export default function Results() {
 
       {/* Main Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <div className="p-4 md:p-6 max-w-[1400px] mx-auto w-full space-y-4">
+        <div className="mx-auto w-full max-w-7xl space-y-5 p-4 md:p-6">
 
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import defaultTemplates from "@/config/templates.json";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
@@ -48,25 +48,23 @@ export default function Templates() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {templates.map((template) => (
           <Card key={template.title} className="group flex flex-col overflow-hidden transition-colors hover:border-primary/50">
-            <div className="aspect-video overflow-hidden bg-muted">
+            <div className="relative aspect-video overflow-hidden bg-muted">
               <img src={template.thumbnail} alt={`${template.title} template preview`} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/55 to-transparent px-3 pb-3 pt-12">
+                <h2 className="text-lg font-semibold text-white drop-shadow-sm">{template.title}</h2>
+                <p className="mt-0.5 text-xs leading-snug text-white/80 drop-shadow-sm">{template.description}</p>
+              </div>
             </div>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-xl">{template.title}</CardTitle>
-              <CardDescription className="mt-2">{template.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1">
-              <div className="flex flex-wrap gap-2">
+            <CardContent className="flex flex-1 flex-col gap-3 p-3">
+              <div className="flex flex-wrap gap-1.5">
                 <Badge variant="secondary">{template.settings.movieType}</Badge>
                 <Badge variant="outline">{template.settings.aspectRatio}</Badge>
                 <Badge variant="outline">{template.settings.visualStyle}</Badge>
               </div>
-            </CardContent>
-            <CardFooter className="border-t pt-4">
-              <Button className="w-full gap-2" onClick={() => handleUseTemplate(template.settings)}>
+              <Button size="sm" className="mt-auto w-full gap-2" onClick={() => handleUseTemplate(template.settings)}>
                 <Play className="size-4" /> Use Template
               </Button>
-            </CardFooter>
+            </CardContent>
           </Card>
         ))}
       </div>

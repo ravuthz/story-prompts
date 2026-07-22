@@ -4,6 +4,28 @@ import masterPromptConfig from "@/config/masterPrompt.json";
 export const parseGeminiApiKeys = (value: string): string[] =>
   [...new Set(value.split(/[\n,]+/).map((key) => key.trim()).filter(Boolean))];
 
+export interface GeminiModelOption {
+  id: string;
+  displayName: string;
+}
+
+export const listGeminiModels = async (apiKeyInput: string): Promise<GeminiModelOption[]> => {
+  const apiKey = parseGeminiApiKeys(apiKeyInput)[0];
+  if (!apiKey) return [];
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+  if (!response.ok) throw new Error("Could not load models for this API key");
+  const data = await response.json();
+  return (data.models || [])
+    .filter((model: { name?: string; supportedGenerationMethods?: string[] }) =>
+      model.name && model.supportedGenerationMethods?.includes("generateContent") &&
+      !/(embedding|image|tts|live|aqa)/i.test(model.name)
+    )
+    .map((model: { name: string; displayName?: string }) => ({
+      id: model.name.replace(/^models\//, ""),
+      displayName: model.displayName || model.name.replace(/^models\//, ""),
+    }));
+};
+
 export const defaultMasterPromptTemplate = masterPromptConfig.template;
 
 export const buildMasterPrompt = (settings: ProjectSettings, template = defaultMasterPromptTemplate): string =>
@@ -12,10 +34,10 @@ export const buildMasterPrompt = (settings: ProjectSettings, template = defaultM
     return typeof value === "string" || typeof value === "number" ? String(value) : "";
   });
 
-const generateWithKey = async (settings: ProjectSettings, apiKey: string, promptTemplate?: string): Promise<StoryboardScene[]> => {
+const generateWithKey = async (settings: ProjectSettings, apiKey: string, model: string, promptTemplate?: string): Promise<StoryboardScene[]> => {
   const prompt = buildMasterPrompt(settings, promptTemplate);
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -40,7 +62,22 @@ const generateWithKey = async (settings: ProjectSettings, apiKey: string, prompt
   return parsed;
 };
 
-export const generateWithGemini = async (settings: ProjectSettings, apiKeyInput: string, promptTemplate?: string): Promise<StoryboardScene[]> => {
+const rankAutoModels = (models: GeminiModelOption[]) => {
+  const preferred = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
+  return [...models].sort((a, b) => {
+    const rank = (id: string) => {
+      const exact = preferred.indexOf(id);
+      if (exact >= 0) return exact;
+      if (/flash/i.test(id) && !/preview/i.test(id)) return 10;
+      if (/flash/i.test(id)) return 20;
+      if (/pro/i.test(id) && !/preview/i.test(id)) return 30;
+      return 40;
+    };
+    return rank(a.id) - rank(b.id);
+  });
+};
+
+export const generateWithGemini = async (settings: ProjectSettings, apiKeyInput: string, promptTemplate?: string, selectedModel = "auto"): Promise<StoryboardScene[]> => {
   const apiKeys = parseGeminiApiKeys(apiKeyInput);
   if (apiKeys.length === 0) {
     throw new Error("Gemini API key is required");
@@ -48,10 +85,21 @@ export const generateWithGemini = async (settings: ProjectSettings, apiKeyInput:
 
   let lastError: unknown;
   for (const apiKey of apiKeys) {
+    let models: GeminiModelOption[];
     try {
-      return await generateWithKey(settings, apiKey, promptTemplate);
+      models = selectedModel === "auto"
+        ? rankAutoModels(await listGeminiModels(apiKey))
+        : [{ id: selectedModel, displayName: selectedModel }];
     } catch (error) {
       lastError = error;
+      continue;
+    }
+    for (const model of models) {
+      try {
+        return await generateWithKey(settings, apiKey, model.id, promptTemplate);
+      } catch (error) {
+        lastError = error;
+      }
     }
   }
   console.error("All Gemini API keys failed:", lastError);

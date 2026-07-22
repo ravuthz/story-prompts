@@ -1,18 +1,19 @@
-import { useState } from "react";
-import { Key, Save, Trash2, Shield, Download, RotateCcw, Braces } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Key, Save, Trash2, Shield, Download, RotateCcw, Braces, RefreshCw, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useCharacterStore } from "@/stores/useCharacterStore";
 import defaultTemplates from "@/config/templates.json";
-import { defaultMasterPromptTemplate } from "@/services/geminiService";
+import { defaultMasterPromptTemplate, GeminiModelOption, listGeminiModels } from "@/services/geminiService";
 
 export default function Settings() {
   const settings = useSettingsStore();
@@ -21,14 +22,41 @@ export default function Settings() {
   
   const [apiKeyInput, setApiKeyInput] = useState(settings.geminiApiKey);
   const [rememberKey, setRememberKey] = useState(settings.rememberApiKey);
+  const [geminiModel, setGeminiModel] = useState(settings.geminiModel);
+  const [availableModels, setAvailableModels] = useState<GeminiModelOption[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [masterPromptInput, setMasterPromptInput] = useState(settings.masterPromptOverride || defaultMasterPromptTemplate);
   const [templatesInput, setTemplatesInput] = useState(settings.templatesOverride || JSON.stringify(defaultTemplates, null, 2));
 
   const handleSaveApiSettings = () => {
     settings.setGeminiApiKey(apiKeyInput);
     settings.setRememberApiKey(rememberKey);
+    settings.setGeminiModel(geminiModel);
     toast.success("API settings saved locally");
   };
+
+  const handleLoadModels = async (keyInput = apiKeyInput) => {
+    if (!keyInput.trim()) {
+      setAvailableModels([]);
+      return;
+    }
+    setIsLoadingModels(true);
+    try {
+      const models = await listGeminiModels(keyInput);
+      setAvailableModels(models);
+      if (models.length === 0) toast.error("No compatible text models found for this key");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not load Gemini models");
+    } finally {
+      setIsLoadingModels(false);
+    }
+  };
+
+  useEffect(() => {
+    if (settings.geminiApiKey) void handleLoadModels(settings.geminiApiKey);
+    // Load once for the saved key; manual refresh uses the current editor value.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.geminiApiKey]);
 
   const handleClearAllData = () => {
     if (window.confirm("WARNING: This will permanently delete all your projects, characters, and settings. Are you sure?")) {
@@ -145,6 +173,25 @@ export default function Settings() {
               <Label htmlFor="rememberKey" className="font-normal">
                 Remember my API keys in local storage
               </Label>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="geminiModel">Gemini model</Label>
+              <div className="flex gap-2">
+                <Select value={geminiModel} onValueChange={(value) => value && setGeminiModel(value)}>
+                  <SelectTrigger id="geminiModel"><SelectValue placeholder="Select model" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">Auto (recommended)</SelectItem>
+                    {availableModels.map((model) => (
+                      <SelectItem key={model.id} value={model.id}>{model.displayName} ({model.id})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button type="button" variant="outline" size="icon" onClick={() => handleLoadModels()} disabled={isLoadingModels || !apiKeyInput.trim()} aria-label="Refresh available models" title="Refresh available models">
+                  {isLoadingModels ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Auto discovers compatible models and tries Flash models first.</p>
             </div>
 
           </CardContent>

@@ -147,6 +147,7 @@ export default function Builder() {
   const { addProject, updateProject, getCurrentProject, setCurrentProject } = useProjectStore();
   const geminiApiKey = useSettingsStore(state => state.geminiApiKey);
   const masterPromptOverride = useSettingsStore(state => state.masterPromptOverride);
+  const geminiModel = useSettingsStore(state => state.geminiModel);
   const [isGenerating, setIsGenerating] = useState(false);
   const [masterPrompt, setMasterPrompt] = useState("");
   const [isPromptOpen, setIsPromptOpen] = useState(false);
@@ -180,7 +181,7 @@ export default function Builder() {
 
     try {
       toast.info("Generating with Gemini...");
-      const scenes = await generateWithGemini(data, geminiApiKey, masterPromptOverride || undefined);
+      const scenes = await generateWithGemini(data, geminiApiKey, masterPromptOverride || undefined, geminiModel);
       toast.success("Generated successfully!");
 
       const project: StoryboardProject = {

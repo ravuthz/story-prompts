@@ -7,6 +7,7 @@ import { Loader2, Wand2, Copy, Key, Settings, Video, Image as ImageIcon, Users, 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { HighlightedTextarea } from "@/components/ui/highlighted-textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -275,11 +276,12 @@ export default function Builder() {
               Paste this into ChatGPT, Gemini, Claude, or another AI agent to generate your storyboard.
             </DialogDescription>
           </DialogHeader>
-          <Textarea
+          <HighlightedTextarea
+            mode="prompt"
             value={masterPrompt}
             readOnly
             aria-label="Generated master storyboard prompt"
-            className="field-sizing-fixed h-[55dvh] min-h-0 max-h-[36rem] resize-none overflow-y-auto bg-muted/30 font-mono text-xs leading-relaxed"
+            className="h-[55dvh] min-h-0 max-h-[36rem] bg-muted/30"
           />
           <DialogFooter>
             <DialogClose render={<Button variant="ghost" />}>Close</DialogClose>

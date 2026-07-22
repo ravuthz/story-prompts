@@ -3,6 +3,7 @@ import { Key, Save, Trash2, Shield, Download, RotateCcw, Braces, RefreshCw, Load
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { HighlightedTextarea } from "@/components/ui/highlighted-textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -96,6 +97,15 @@ export default function Settings() {
     setTemplatesInput(JSON.stringify(defaultTemplates, null, 2));
     settings.resetConfiguration();
     toast.success("Configuration reset to JSON defaults");
+  };
+
+  const handleFormatTemplates = () => {
+    try {
+      setTemplatesInput(JSON.stringify(JSON.parse(templatesInput), null, 2));
+      toast.success("Templates JSON formatted");
+    } catch {
+      toast.error("Fix the invalid JSON before formatting");
+    }
   };
 
   const handleExportAllData = () => {
@@ -227,12 +237,24 @@ export default function Settings() {
           <CardContent className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="masterPromptConfig">Master prompt template</Label>
-              <Textarea id="masterPromptConfig" value={masterPromptInput} onChange={(event) => setMasterPromptInput(event.target.value)} className="field-sizing-fixed min-h-56 font-mono text-xs" spellCheck={false} />
+              <HighlightedTextarea id="masterPromptConfig" mode="prompt" value={masterPromptInput} onChange={(event) => setMasterPromptInput(event.target.value)} className="h-64" />
               <p className="text-xs text-muted-foreground">Use placeholders such as {"{{title}}"}, {"{{storyConcept}}"}, and {"{{numberOfScenes}}"}.</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="templatesConfig">Templates JSON</Label>
-              <Textarea id="templatesConfig" value={templatesInput} onChange={(event) => setTemplatesInput(event.target.value)} className="field-sizing-fixed min-h-72 font-mono text-xs" spellCheck={false} />
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="templatesConfig">Templates JSON</Label>
+                <Button type="button" variant="outline" size="sm" onClick={handleFormatTemplates} className="gap-1.5"><Braces className="size-3.5" /> Format JSON</Button>
+              </div>
+              <HighlightedTextarea
+                id="templatesConfig"
+                mode="json"
+                value={templatesInput}
+                onChange={(event) => setTemplatesInput(event.target.value)}
+                onBlur={() => {
+                  try { setTemplatesInput(JSON.stringify(JSON.parse(templatesInput), null, 2)); } catch { /* Keep invalid input available for correction. */ }
+                }}
+                className="h-80"
+              />
             </div>
           </CardContent>
           <CardFooter className="flex-wrap gap-2 border-t bg-muted/20 pt-4">

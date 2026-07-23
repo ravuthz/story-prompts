@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { 
-  Clapperboard, Sun, Moon, Key,
+  Clapperboard, Sun, Moon, Key, Share2,
   Home, Folder, LayoutTemplate, Film, Settings, Clock, HelpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { parseGeminiApiKeys } from "@/services/geminiService";
+import { toast } from "sonner";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
@@ -26,6 +27,30 @@ export default function AppLayout() {
   const geminiApiKey = useSettingsStore(state => state.geminiApiKey);
   const apiKeyCount = parseGeminiApiKeys(geminiApiKey).length;
   const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+  const handleShare = async () => {
+    const shareData: ShareData = {
+      title: "Storyboard Prompt Builder",
+      text: "Create AI video storyboard prompts in seconds.",
+      url: window.location.origin,
+    };
+
+    try {
+      const response = await fetch("/social-preview.png");
+      const image = new File([await response.blob()], "storyboard-prompt-builder.png", { type: "image/png" });
+      if (navigator.share) {
+        if (navigator.canShare?.({ files: [image] })) shareData.files = [image];
+        await navigator.share(shareData);
+        return;
+      }
+      await navigator.clipboard.writeText(window.location.origin);
+      toast.success("Share link copied");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      await navigator.clipboard.writeText(window.location.origin);
+      toast.success("Share link copied");
+    }
+  };
   
   const NavLinks = () => (
     <>
@@ -83,6 +108,9 @@ export default function AppLayout() {
               {apiKeyCount > 0 ? `${apiKeyCount} API key${apiKeyCount === 1 ? "" : "s"}` : "No API Key"}
             </span>
           </Badge>
+          <Button variant="outline" size="icon" className="size-8" onClick={handleShare} aria-label="Share Storyboard Prompt Builder" title="Share">
+            <Share2 className="size-4" />
+          </Button>
           <Button
             variant="outline"
             size="icon"

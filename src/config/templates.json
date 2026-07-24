@@ -126,5 +126,44 @@
       "visualStyle": "Cinematic Realistic",
       "aspectRatio": "16:9 Landscape"
     }
+  },
+  {
+    "title": "Cartoon Horror",
+    "description": "Spooky animated mystery with expressive characters, haunted places, and family-friendly supernatural suspense.",
+    "thumbnail": "/templates/cartoon-horror.png",
+    "settings": {
+      "numberOfScenes": 10,
+      "movieType": "Animation",
+      "genre": "Horror / Mystery",
+      "visualStyle": "2D Animation",
+      "aspectRatio": "16:9 Landscape",
+      "pacing": "Tense and Playful",
+      "tone": "Spooky Adventure",
+      "lightingStyle": "Moonlight and Lantern Glow",
+      "colorPalette": "Indigo / Ghost Green / Lantern Orange",
+      "suspenseLevel": "High",
+      "violenceLevel": "None",
+      "atmosphere": "Foggy and Supernatural"
+    }
+  },
+  {
+    "title": "Realistic Horror",
+    "description": "Cinematic supernatural horror with grounded characters, atmospheric locations, and escalating psychological tension.",
+    "thumbnail": "/templates/realistic-horror.png",
+    "settings": {
+      "numberOfScenes": 10,
+      "movieType": "Horror Short",
+      "genre": "Supernatural Horror",
+      "visualStyle": "Cinematic Realistic",
+      "aspectRatio": "16:9 Landscape",
+      "pacing": "Slow Burn",
+      "tone": "Dark and Suspenseful",
+      "lightingStyle": "Low-Key Practical Lighting",
+      "colorPalette": "Desaturated Charcoal / Cold Blue / Faint Amber",
+      "suspenseLevel": "High",
+      "violenceLevel": "Low",
+      "atmosphere": "Claustrophobic and Unsettling",
+      "filmGrain": "Medium"
+    }
   }
 ]

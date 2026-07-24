@@ -244,7 +244,7 @@ export default function Settings() {
             <CardDescription>Configure the master prompt formats and JSON template catalog.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div role="tablist" aria-label="Configuration format" className="flex w-full flex-col gap-1 rounded-lg bg-muted p-1 sm:w-fit sm:flex-row">
+            <div role="tablist" aria-label="Configuration format" className="grid w-full grid-cols-2 gap-1 rounded-lg bg-muted p-1 sm:flex sm:w-fit">
               <Button
                 type="button"
                 role="tab"

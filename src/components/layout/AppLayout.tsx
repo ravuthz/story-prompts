@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { 
+import {
   Clapperboard, Sun, Moon, Key, Share2,
   Home, Folder, LayoutTemplate, Film, Settings, Clock, HelpCircle
 } from "lucide-react";
@@ -51,21 +51,21 @@ export default function AppLayout() {
       toast.success("Share link copied");
     }
   };
-  
+
   const NavLinks = () => (
     <>
       {navItems.map((item) => {
         const Icon = item.icon;
-        const isActive = location.pathname === item.href || 
+        const isActive = location.pathname === item.href ||
           (item.href !== "/" && location.pathname.startsWith(item.href));
-        
+
         return (
           <Link
             key={item.href}
             to={item.href}
             className={cn(
               "mb-1 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-              isActive 
+              isActive
                 ? "bg-accent text-accent-foreground"
                 : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
             )}
@@ -104,9 +104,12 @@ export default function AppLayout() {
             title={apiKeyCount > 0 ? `${apiKeyCount} API key${apiKeyCount === 1 ? "" : "s"} configured` : "No API key configured"}
           >
             <Key className={apiKeyCount > 0 ? "text-green-600 dark:text-green-400" : "text-destructive"} />
-            <span className="hidden sm:inline">
-              {apiKeyCount > 0 ? `${apiKeyCount} API key${apiKeyCount === 1 ? "" : "s"}` : "No API Key"}
-            </span>
+            {apiKeyCount > 0 ? (
+              <span className="hidden sm:inline">
+                {`${apiKeyCount} API key${apiKeyCount === 1 ? "" : "s"}`}
+              </span>
+            ) : <></>}
+
           </Badge>
           <Button variant="outline" size="icon" className="size-8" onClick={handleShare} aria-label="Share Storyboard Prompt Builder" title="Share">
             <Share2 className="size-4" />
@@ -137,13 +140,13 @@ export default function AppLayout() {
         <aside className="hidden h-full w-56 shrink-0 flex-col overflow-hidden border-r bg-card md:flex">
           <nav className="flex-1 p-3">
             <NavLinks />
-            
+
             {currentProject && (
               <div className="mt-8 mb-4">
                 <div className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Current Project</div>
                 <Link to={currentProject.scenes.length ? `/results/${currentProject.id}` : "/builder"} className="flex items-center gap-2.5 rounded-lg border bg-muted/30 p-2.5 transition-colors hover:bg-muted">
                   <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary text-primary-foreground/60">
-                     <Film className="w-5 h-5" />
+                    <Film className="w-5 h-5" />
                   </div>
                   <div className="overflow-hidden">
                     <div className="truncate text-sm font-semibold">{currentProject.title}</div>

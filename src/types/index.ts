@@ -321,4 +321,6 @@ export interface StoryboardProject {
   settings: ProjectSettings;
   characters: Character[];
   scenes: StoryboardScene[];
+  masterPrompt?: string;
+  masterPromptMarkdown?: string;
 }

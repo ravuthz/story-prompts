@@ -2,21 +2,19 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
-import { Loader2, Wand2, Copy, Key, Settings, Video, Image as ImageIcon, Users, Save, RotateCcw, Check, FileText } from "lucide-react";
+import { Loader2, Wand2, Settings, Video, Image as ImageIcon, Users, Save, RotateCcw, Check, FileText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { HighlightedTextarea } from "@/components/ui/highlighted-textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
-import { buildMasterPrompt, generateWithGemini, parseGeminiApiKeys } from "@/services/geminiService";
+import { buildMarkdownMasterPrompt, buildMasterPrompt, generateWithGemini, parseGeminiApiKeys } from "@/services/geminiService";
 import { ProjectSettings, StoryboardProject } from "@/types";
 
 const defaultSettings: ProjectSettings = {
@@ -149,11 +147,10 @@ export default function Builder() {
   const { addProject, updateProject, getCurrentProject, setCurrentProject } = useProjectStore();
   const geminiApiKey = useSettingsStore(state => state.geminiApiKey);
   const masterPromptOverride = useSettingsStore(state => state.masterPromptOverride);
+  const markdownMasterPromptOverride = useSettingsStore(state => state.markdownMasterPromptOverride);
   const geminiModel = useSettingsStore(state => state.geminiModel);
   const generateAction = useSettingsStore(state => state.generateAction || "ask");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [masterPrompt, setMasterPrompt] = useState("");
-  const [isPromptOpen, setIsPromptOpen] = useState(false);
   const [isDraftSaved, setIsDraftSaved] = useState(false);
   const [isGenerateMenuOpen, setIsGenerateMenuOpen] = useState(false);
   const hasApiKey = parseGeminiApiKeys(geminiApiKey).length > 0;
@@ -196,7 +193,9 @@ export default function Builder() {
         updatedAt: new Date().toISOString(),
         settings: data,
         characters: currentProject?.characters || [],
-        scenes
+        scenes,
+        masterPrompt: undefined,
+        masterPromptMarkdown: undefined,
       };
 
       if (currentProject) {
@@ -218,22 +217,34 @@ export default function Builder() {
   const handleDirectGenerate = handleSubmit(onSubmit);
 
   const handleOpenMasterPrompt = handleSubmit((data) => {
-    setMasterPrompt(buildMasterPrompt(data, masterPromptOverride || undefined));
-    setIsPromptOpen(true);
+    const projectId = currentProject?.id || uuidv4();
+    const promptTemplate = masterPromptOverride || undefined;
+    const markdownPromptTemplate = markdownMasterPromptOverride || undefined;
+    const project: StoryboardProject = {
+      id: projectId,
+      title: data.title,
+      mode: "static",
+      createdAt: currentProject?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      settings: data,
+      characters: currentProject?.characters || [],
+      scenes: [],
+      masterPrompt: buildMasterPrompt(data, promptTemplate),
+      masterPromptMarkdown: buildMarkdownMasterPrompt(data, markdownPromptTemplate),
+    };
+
+    if (currentProject) {
+      updateProject(projectId, project);
+    } else {
+      addProject(project);
+    }
+    setCurrentProject(projectId);
+    navigate(`/results/${projectId}`);
   });
 
   const handleGenerateButton = () => {
     if (!hasApiKey || generateAction === "copy") void handleOpenMasterPrompt();
     if (hasApiKey && generateAction === "generate") void handleDirectGenerate();
-  };
-
-  const handleCopyPrompt = async () => {
-    try {
-      await navigator.clipboard.writeText(masterPrompt);
-      toast.success("Master prompt copied");
-    } catch {
-      toast.error("Could not copy the prompt. Select the text and copy it manually.");
-    }
   };
 
   const saveDraft = (data: ProjectSettings) => {
@@ -268,33 +279,6 @@ export default function Builder() {
 
   return (
     <div className="mx-auto h-full w-full max-w-7xl space-y-5 overflow-y-auto p-4 md:p-6">
-      <Dialog open={isPromptOpen} onOpenChange={setIsPromptOpen}>
-        <DialogContent className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-4 sm:max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Your master storyboard prompt</DialogTitle>
-            <DialogDescription>
-              Paste this into ChatGPT, Gemini, Claude, or another AI agent to generate your storyboard.
-            </DialogDescription>
-          </DialogHeader>
-          <HighlightedTextarea
-            mode="prompt"
-            value={masterPrompt}
-            readOnly
-            aria-label="Generated master storyboard prompt"
-            className="h-[55dvh] min-h-0 max-h-[36rem] bg-muted/30"
-          />
-          <DialogFooter>
-            <DialogClose render={<Button variant="ghost" />}>Close</DialogClose>
-            <Button variant="outline" onClick={() => { setIsPromptOpen(false); navigate("/settings"); }} className="gap-2">
-              <Key className="h-4 w-4" /> Add API key
-            </Button>
-            <Button onClick={handleCopyPrompt} className="gap-2">
-              <Copy className="h-4 w-4" /> Copy master prompt
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <form className="space-y-5">
         <div className="w-full space-y-5 pb-12">
           

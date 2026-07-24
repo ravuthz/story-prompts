@@ -27,12 +27,16 @@ export const listGeminiModels = async (apiKeyInput: string): Promise<GeminiModel
 };
 
 export const defaultMasterPromptTemplate = masterPromptConfig.template;
+export const defaultMarkdownMasterPromptTemplate = masterPromptConfig.markdownTemplate;
 
 export const buildMasterPrompt = (settings: ProjectSettings, template = defaultMasterPromptTemplate): string =>
   template.replace(/\{\{(\w+)\}\}/g, (_match, key: string) => {
     const value = settings[key as keyof ProjectSettings];
     return typeof value === "string" || typeof value === "number" ? String(value) : "";
   });
+
+export const buildMarkdownMasterPrompt = (settings: ProjectSettings, template = defaultMarkdownMasterPromptTemplate): string =>
+  buildMasterPrompt(settings, template);
 
 const generateWithKey = async (settings: ProjectSettings, apiKey: string, model: string, promptTemplate?: string): Promise<StoryboardScene[]> => {
   const prompt = buildMasterPrompt(settings, promptTemplate);

@@ -2,17 +2,20 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Copy, Download, Image as ImageIcon, Video, ArrowLeft, ArrowRight, Settings,
-  Edit2, FileText, Clock, Trash2, Sparkles, RefreshCw, X, Film, Users, Sun
+  Edit2, FileText, Clock, Trash2, Sparkles, RefreshCw, X, Film, Users, Sun, Braces
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { HighlightedTextarea } from "@/components/ui/highlighted-textarea";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 
 import { useProjectStore } from "@/stores/useProjectStore";
+import { useSettingsStore } from "@/stores/useSettingsStore";
 import { exportProjectJSON } from "@/services/exportService";
+import { buildMarkdownMasterPrompt } from "@/services/geminiService";
 import { StoryboardScene } from "@/types";
 import { imageStorage } from "@/services/imageStorage";
 
@@ -21,10 +24,17 @@ export default function Results() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { projects, updateProject, setCurrentProject } = useProjectStore();
+  const markdownMasterPromptOverride = useSettingsStore(state => state.markdownMasterPromptOverride);
 
   const project = projects.find(p => p.id === projectId);
+  const markdownMasterPrompt = project
+    ? (!project.masterPromptMarkdown || project.masterPromptMarkdown.includes("OUTPUT FORMAT OVERRIDE:")
+      ? buildMarkdownMasterPrompt(project.settings, markdownMasterPromptOverride || undefined)
+      : project.masterPromptMarkdown)
+    : "";
 
   const [activeSceneIndex, setActiveSceneIndex] = useState(0);
+  const [promptFormat, setPromptFormat] = useState<"json" | "markdown">("json");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -57,6 +67,91 @@ export default function Results() {
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
         <h2 className="text-2xl font-bold">Project Not Found</h2>
         <Button onClick={() => navigate("/")}>Return to Dashboard</Button>
+      </div>
+    );
+  }
+
+  const copyMasterPrompt = async (format: "json" | "markdown") => {
+    const prompt = format === "json" ? project.masterPrompt : markdownMasterPrompt;
+    if (!prompt) return;
+    try {
+      await navigator.clipboard.writeText(prompt);
+      toast.success(`${format === "json" ? "JSON" : "Markdown"} master prompt copied`);
+    } catch {
+      toast.error("Could not copy the master prompt");
+    }
+  };
+
+  if (project.masterPrompt) {
+    const previewPrompt = promptFormat === "json"
+      ? project.masterPrompt
+      : markdownMasterPrompt;
+
+    return (
+      <div className="h-full overflow-y-auto bg-muted/20">
+        <main className="mx-auto w-full max-w-7xl space-y-5 p-4 md:p-6">
+          <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+                <FileText className="size-6 text-primary" />
+                Master Storyboard Prompt
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Preview and copy a ready-to-use prompt for any AI chat or agent.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <Button variant="outline" className="gap-2" onClick={() => void copyMasterPrompt("json")}>
+                <Braces className="size-4" /> Copy JSON prompt
+              </Button>
+              <Button variant="outline" className="gap-2" onClick={() => void copyMasterPrompt("markdown")}>
+                <FileText className="size-4" /> Copy Markdown prompt
+              </Button>
+            </div>
+          </header>
+
+          <Card className="gap-0 overflow-hidden py-0 shadow-sm">
+            <CardHeader className="flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <CardTitle className="truncate text-base">{project.title}</CardTitle>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {project.settings.numberOfScenes} scenes · {project.settings.aspectRatio} · {project.settings.visualStyle}
+                </p>
+              </div>
+              <div role="tablist" aria-label="Master prompt format" className="flex rounded-lg bg-muted p-1">
+                <Button
+                  role="tab"
+                  aria-selected={promptFormat === "json"}
+                  size="sm"
+                  variant={promptFormat === "json" ? "default" : "ghost"}
+                  onClick={() => setPromptFormat("json")}
+                  className="h-8"
+                >
+                  JSON
+                </Button>
+                <Button
+                  role="tab"
+                  aria-selected={promptFormat === "markdown"}
+                  size="sm"
+                  variant={promptFormat === "markdown" ? "default" : "ghost"}
+                  onClick={() => setPromptFormat("markdown")}
+                  className="h-8"
+                >
+                  Markdown
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4">
+              <HighlightedTextarea
+                mode="prompt"
+                value={previewPrompt}
+                readOnly
+                aria-label={`${promptFormat} master storyboard prompt preview`}
+                className="min-h-[60dvh] resize-none bg-muted/20 font-mono text-xs leading-relaxed"
+              />
+            </CardContent>
+          </Card>
+        </main>
       </div>
     );
   }

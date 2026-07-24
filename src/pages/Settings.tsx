@@ -14,7 +14,7 @@ import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useCharacterStore } from "@/stores/useCharacterStore";
 import defaultTemplates from "@/config/templates.json";
-import { defaultMasterPromptTemplate, GeminiModelOption, listGeminiModels } from "@/services/geminiService";
+import { defaultMarkdownMasterPromptTemplate, defaultMasterPromptTemplate, GeminiModelOption, listGeminiModels } from "@/services/geminiService";
 
 export default function Settings() {
   const settings = useSettingsStore();
@@ -27,7 +27,9 @@ export default function Settings() {
   const [generateAction, setGenerateAction] = useState(settings.generateAction || "ask");
   const [availableModels, setAvailableModels] = useState<GeminiModelOption[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [configurationTab, setConfigurationTab] = useState<"json" | "markdown">("json");
   const [masterPromptInput, setMasterPromptInput] = useState(settings.masterPromptOverride || defaultMasterPromptTemplate);
+  const [markdownMasterPromptInput, setMarkdownMasterPromptInput] = useState(settings.markdownMasterPromptOverride || defaultMarkdownMasterPromptTemplate);
   const [templatesInput, setTemplatesInput] = useState(settings.templatesOverride || JSON.stringify(defaultTemplates, null, 2));
 
   const handleSaveApiSettings = () => {
@@ -70,7 +72,11 @@ export default function Settings() {
 
   const handleSaveConfiguration = () => {
     if (!masterPromptInput.trim()) {
-      toast.error("Master prompt cannot be empty");
+      toast.error("JSON master prompt cannot be empty");
+      return;
+    }
+    if (!markdownMasterPromptInput.trim()) {
+      toast.error("Markdown master prompt cannot be empty");
       return;
     }
     try {
@@ -87,6 +93,7 @@ export default function Settings() {
       return;
     }
     settings.setMasterPromptOverride(masterPromptInput === defaultMasterPromptTemplate ? "" : masterPromptInput);
+    settings.setMarkdownMasterPromptOverride(markdownMasterPromptInput === defaultMarkdownMasterPromptTemplate ? "" : markdownMasterPromptInput);
     const normalizedDefault = JSON.stringify(defaultTemplates, null, 2);
     settings.setTemplatesOverride(templatesInput === normalizedDefault ? "" : templatesInput);
     toast.success("Configuration overrides saved");
@@ -94,6 +101,7 @@ export default function Settings() {
 
   const handleResetConfiguration = () => {
     setMasterPromptInput(defaultMasterPromptTemplate);
+    setMarkdownMasterPromptInput(defaultMarkdownMasterPromptTemplate);
     setTemplatesInput(JSON.stringify(defaultTemplates, null, 2));
     settings.resetConfiguration();
     toast.success("Configuration reset to JSON defaults");
@@ -118,6 +126,7 @@ export default function Settings() {
         theme: settings.theme,
         rememberApiKey: settings.rememberApiKey,
         masterPromptOverride: settings.masterPromptOverride,
+        markdownMasterPromptOverride: settings.markdownMasterPromptOverride,
         templatesOverride: settings.templatesOverride,
       },
     };
@@ -232,30 +241,71 @@ export default function Settings() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Braces className="size-5 text-primary" /> Prompt & Template Configuration</CardTitle>
-            <CardDescription>Override the JSON defaults used by master prompts and the template catalog.</CardDescription>
+            <CardDescription>Configure the master prompt formats and JSON template catalog.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="masterPromptConfig">Master prompt template</Label>
-              <HighlightedTextarea id="masterPromptConfig" mode="prompt" value={masterPromptInput} onChange={(event) => setMasterPromptInput(event.target.value)} className="h-64" />
-              <p className="text-xs text-muted-foreground">Use placeholders such as {"{{title}}"}, {"{{storyConcept}}"}, and {"{{numberOfScenes}}"}.</p>
+            <div role="tablist" aria-label="Configuration format" className="flex w-full flex-col gap-1 rounded-lg bg-muted p-1 sm:w-fit sm:flex-row">
+              <Button
+                type="button"
+                role="tab"
+                aria-selected={configurationTab === "json"}
+                variant={configurationTab === "json" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setConfigurationTab("json")}
+                className="w-full sm:w-auto"
+              >
+                <Braces className="size-4" /> JSON
+              </Button>
+              <Button
+                type="button"
+                role="tab"
+                aria-selected={configurationTab === "markdown"}
+                variant={configurationTab === "markdown" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setConfigurationTab("markdown")}
+                className="w-full sm:w-auto"
+              >
+                Markdown
+              </Button>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-3">
-                <Label htmlFor="templatesConfig">Templates JSON</Label>
-                <Button type="button" variant="outline" size="sm" onClick={handleFormatTemplates} className="gap-1.5"><Braces className="size-3.5" /> Format JSON</Button>
+
+            {configurationTab === "json" ? (
+              <div role="tabpanel" className="h-[65dvh] min-h-[28rem] max-h-[46rem] space-y-5 overflow-y-auto pr-1">
+                <div className="space-y-2">
+                  <Label htmlFor="masterPromptConfig">JSON master prompt template</Label>
+                  <HighlightedTextarea id="masterPromptConfig" mode="prompt" value={masterPromptInput} onChange={(event) => setMasterPromptInput(event.target.value)} className="h-64" />
+                  <p className="text-xs text-muted-foreground">Use placeholders such as {"{{title}}"}, {"{{storyConcept}}"}, and {"{{numberOfScenes}}"}.</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <Label htmlFor="templatesConfig">Templates JSON</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={handleFormatTemplates} className="gap-1.5"><Braces className="size-3.5" /> Format JSON</Button>
+                  </div>
+                  <HighlightedTextarea
+                    id="templatesConfig"
+                    mode="json"
+                    value={templatesInput}
+                    onChange={(event) => setTemplatesInput(event.target.value)}
+                    onBlur={() => {
+                      try { setTemplatesInput(JSON.stringify(JSON.parse(templatesInput), null, 2)); } catch { /* Keep invalid input available for correction. */ }
+                    }}
+                    className="h-80"
+                  />
+                </div>
               </div>
-              <HighlightedTextarea
-                id="templatesConfig"
-                mode="json"
-                value={templatesInput}
-                onChange={(event) => setTemplatesInput(event.target.value)}
-                onBlur={() => {
-                  try { setTemplatesInput(JSON.stringify(JSON.parse(templatesInput), null, 2)); } catch { /* Keep invalid input available for correction. */ }
-                }}
-                className="h-80"
-              />
-            </div>
+            ) : (
+              <div role="tabpanel" className="h-[65dvh] min-h-[28rem] max-h-[46rem] space-y-2 overflow-y-auto pr-1">
+                <Label htmlFor="markdownMasterPromptConfig">Markdown master prompt template</Label>
+                <HighlightedTextarea
+                  id="markdownMasterPromptConfig"
+                  mode="prompt"
+                  value={markdownMasterPromptInput}
+                  onChange={(event) => setMarkdownMasterPromptInput(event.target.value)}
+                  className="h-80"
+                />
+                <p className="text-xs text-muted-foreground">Used by the Copy Markdown prompt action on new master-prompt results.</p>
+              </div>
+            )}
           </CardContent>
           <CardFooter className="flex-wrap gap-2 border-t bg-muted/20 pt-4">
             <Button onClick={handleSaveConfiguration} className="gap-2"><Save className="size-4" /> Save Overrides</Button>

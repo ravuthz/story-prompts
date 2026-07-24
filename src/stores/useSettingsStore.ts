@@ -5,6 +5,7 @@ interface SettingsState {
   geminiApiKey: string;
   rememberApiKey: boolean;
   masterPromptOverride: string;
+  markdownMasterPromptOverride: string;
   templatesOverride: string;
   geminiModel: string;
   generateAction: "ask" | "generate" | "copy";
@@ -12,6 +13,7 @@ interface SettingsState {
   setGeminiApiKey: (key: string) => void;
   setRememberApiKey: (remember: boolean) => void;
   setMasterPromptOverride: (value: string) => void;
+  setMarkdownMasterPromptOverride: (value: string) => void;
   setTemplatesOverride: (value: string) => void;
   resetConfiguration: () => void;
   setGeminiModel: (model: string) => void;
@@ -26,6 +28,7 @@ export const useSettingsStore = create<SettingsState>()(
       geminiApiKey: "",
       rememberApiKey: false,
       masterPromptOverride: "",
+      markdownMasterPromptOverride: "",
       templatesOverride: "",
       geminiModel: "auto",
       generateAction: "ask",
@@ -33,8 +36,9 @@ export const useSettingsStore = create<SettingsState>()(
       setGeminiApiKey: (key) => set({ geminiApiKey: key }),
       setRememberApiKey: (remember) => set({ rememberApiKey: remember }),
       setMasterPromptOverride: (value) => set({ masterPromptOverride: value }),
+      setMarkdownMasterPromptOverride: (value) => set({ markdownMasterPromptOverride: value }),
       setTemplatesOverride: (value) => set({ templatesOverride: value }),
-      resetConfiguration: () => set({ masterPromptOverride: "", templatesOverride: "" }),
+      resetConfiguration: () => set({ masterPromptOverride: "", markdownMasterPromptOverride: "", templatesOverride: "" }),
       setGeminiModel: (model) => set({ geminiModel: model }),
       setGenerateAction: (action) => set({ generateAction: action }),
       setTheme: (theme) => set({ theme }),
@@ -47,6 +51,7 @@ export const useSettingsStore = create<SettingsState>()(
         rememberApiKey: state.rememberApiKey,
         theme: state.theme,
         masterPromptOverride: state.masterPromptOverride,
+        markdownMasterPromptOverride: state.markdownMasterPromptOverride,
         templatesOverride: state.templatesOverride,
         geminiModel: state.geminiModel,
         generateAction: state.generateAction,
